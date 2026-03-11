@@ -5,9 +5,6 @@ import api from './services/api'
 function App() {
   const [users, setUsers] = useState([])
   const [apiStatus, setApiStatus] = useState('checking...')
-  //const [newUser, setNewUser] = useState({ name: '', email: '' })
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     checkApiHealth()
@@ -47,7 +44,7 @@ function App() {
       <div className="card">
         <h2>Users ({users.length})</h2>
         {users.length === 0 ? (
-          <p>No users found. Add one above!</p>
+          <p>No users found. Check DB connection</p>
         ) : (
           <ul className="user-list">
             {users.map((user) => (

@@ -3,6 +3,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 //API service for communicating with the Flask backend
 
+//The functions below are examples to be referred to on how to structure API calls. You can modify or expand them as needed for your functions.
+
 export const api = {
   
   // Connection test endpoint
@@ -14,9 +16,7 @@ export const api = {
     return response.json();
   },
 
-  /**
-   * Get all users
-   */
+  // Database connection test endpoint
   async getUsers() {
     const response = await fetch(`${API_BASE_URL}/users`);
     if (!response.ok) {
