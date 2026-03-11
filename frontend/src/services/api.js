@@ -1,13 +1,11 @@
-const API_BASE_URL = '/api';
 
-/**
- * API service for communicating with the Flask backend
- */
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+//API service for communicating with the Flask backend
 
 export const api = {
-  /**
-   * Health check endpoint
-   */
+  
+  // Connection test endpoint
   async healthCheck() {
     const response = await fetch(`${API_BASE_URL}/health`);
     if (!response.ok) {

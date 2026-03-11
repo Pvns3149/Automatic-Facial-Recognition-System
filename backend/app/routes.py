@@ -8,25 +8,24 @@ api_bp = Blueprint("api", __name__)
 
 @api_bp.route("/health", methods=["GET"])
 def health_check():
-    """Health check endpoint."""
+    #Connection test
     return jsonify({"status": "healthy", "message": "API is running"})
 
 
 @api_bp.route("/users", methods=["GET"])
 def get_users():
-    """Get all users."""
+    #Database display test
     users = Sample.query.all()
     return jsonify({"users": [user.to_dict() for user in users]})
 
-
-@api_bp.route("/users/<int:user_id>", methods=["GET"])
-def get_user(user_id):
-    """Get a specific user by ID."""
-    user = Sample.query.get_or_404(user_id)
-    return jsonify({"user": user.to_dict()})
-
-
 # Sample databse actions
+
+# @api_bp.route("/users/<int:user_id>", methods=["GET"])
+# def get_user(user_id):
+#     """Get a specific user by ID."""
+#     user = Sample.query.get_or_404(user_id)
+#     return jsonify({"user": user.to_dict()})
+
 
 # @api_bp.route("/users", methods=["POST"])
 # def create_user():

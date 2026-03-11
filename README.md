@@ -82,14 +82,11 @@ The frontend will be available at `http://localhost:5173`.
 |--------|----------|-------------|
 | GET | `/api/health` | Health check |
 | GET | `/api/users` | Get all users |
-| GET | `/api/users/:id` | Get user by ID |
-| POST | `/api/users` | Create a new user |
-| PUT | `/api/users/:id` | Update a user |
-| DELETE | `/api/users/:id` | Delete a user |
+
 
 ## Technologies Used
 
 - **Frontend**: React 19, Vite
 - **Backend**: Python, Flask 3.0
-- **Database**: SQLite with SQLAlchemy ORM
+- **Database**: SQLAlchemy ORM
 - **API**: RESTful API with Flask-CORS for cross-origin support

@@ -17,6 +17,8 @@ def create_app(config_name):
     # Initialize db and CORS extensions
     db.init_app(app)
     migrate.init_app(app, db)
+
+    #Allow all origins
     CORS(app)
 
     # Register blueprints
