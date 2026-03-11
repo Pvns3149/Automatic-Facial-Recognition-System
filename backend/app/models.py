@@ -1,38 +1,37 @@
-from datetime import datetime, timezone
-
 from app import db
+from sqlalchemy.dialects.postgresql import ARRAY
 
+class Sample(db.Model):
+    #student table
 
-class User(db.Model):
-    """User model for the facial recognition system."""
+    __tablename__ = "sample"
 
-    __tablename__ = "users"
+    col1 = db.Column(db.String(3), nullable=False, primary_key=True)
+    col2 = db.Column(db.String(3), nullable=False)
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    created_at = db.Column(
-        db.DateTime, default=lambda: datetime.now(timezone.utc)
-    )
-    updated_at = db.Column(
-        db.DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-    )
-
+    #Dict for JSON response
     def to_dict(self):
         """Convert user object to dictionary."""
         return {
-            "id": self.id,
-            "name": self.name,
-            "email": self.email,
-            "created_at": self.created_at.isoformat()
-            if self.created_at
-            else None,
-            "updated_at": self.updated_at.isoformat()
-            if self.updated_at
-            else None,
+            "col1": self.col1,
+            "col2": self.col2
+
         }
 
+    #Identifier
     def __repr__(self):
-        return f"<User {self.name}>"
+        return f"<User {self.col1}>"
+
+class Vector(db.Model):
+    #Vector table
+
+    __tablename__ = "tblvector"
+
+    id = db.Column(db.String(100), nullable=False, primary_key=True)
+    embedding = db.Column(ARRAY(db.Float), nullable=False)
+
+
+
+    #Identifier
+    def __repr__(self):
+        return f"<User {self.id}>"

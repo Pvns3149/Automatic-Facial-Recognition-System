@@ -1,7 +1,10 @@
-# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files / cache files / temp files
 __pycache__/
 *.py[codz]
 *$py.class
+*.pyc
+*.bak
+*.tmp
 
 # C extensions
 *.so
@@ -212,5 +215,3 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# SQLite database
-*.db
