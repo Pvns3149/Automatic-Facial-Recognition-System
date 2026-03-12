@@ -146,7 +146,7 @@ function MyClassesPage({ classes }) {
               <div
                 className="classes-pie"
                 style={{
-                  backgroundImage: `conic-gradient(#3c458e 0 ${presentPct}%, #012970 ${presentPct}% 100%)`,
+                  backgroundImage: `conic-gradient(#3c458e 0 ${presentPct}%, #770d0f ${presentPct}% 100%)`,
                 }}
               />
               <div className="classes-pie-center">

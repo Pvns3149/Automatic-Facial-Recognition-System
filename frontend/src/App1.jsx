@@ -3,6 +3,7 @@ import DashboardPage from './DashboardPage';
 import SupportPage from './SupportPage';
 import MyClassesPage from './MyClassesPage';
 import StudentsPage from './StudentsPage';
+import TestPage from './test';
 
 const INITIAL_CLASSES = [
   {
@@ -152,6 +153,17 @@ function App() {
               <span className="nav-label">Support</span>
             </a>
 
+              {/* Option  below to be removed after testing */}
+            <a
+              href="#test"
+              className={`nav-item nav-item-test${
+                page === 'test' ? ' is-active' : ''
+              }`}
+              onClick={handleNavClick('test')}
+            >
+              <span className="nav-label">Test</span>
+            </a>
+
             <div className="nav-spacer" />
 
             <a className="nav-item nav-item-logout" href="#">
@@ -173,6 +185,7 @@ function App() {
         )}
         {page === 'students' && <StudentsPage />}
         {page === 'support' && <SupportPage />}
+         {page === 'test' && <TestPage />}  {/* REMOVE AFTER TESTING */}
       </div>
     </div>
   );
