@@ -18,6 +18,8 @@ def get_users():
     users = Sample.query.all()
     return jsonify({"users": [user.to_dict() for user in users]})
 
+
+
 # Sample databse actions
 
 # @api_bp.route("/users/<int:user_id>", methods=["GET"])
