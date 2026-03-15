@@ -12,8 +12,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy import Integer, Text, Column
 
 class FacialRecognitionModel:
-    def __init__(self):
-        self.prepare_models()
+    def __init__(self, detector_path: str = "", recogniser_path: str = ""):
+        self.prepare_models(detector_path, recogniser_path)
 
     """
     Initialises the detection and recognition models for image processing
@@ -25,8 +25,11 @@ class FacialRecognitionModel:
             with zipfile.ZipFile(".insightface/models/buffalo_l/buffalo_l.zip", 'r') as zipref:
                 zipref.extractall(path=".insightface/models/buffalo_l/", members=["w600k_r50.onnx", "det_10g.onnx"])
 
-        self.detector = model_zoo.get_model(".insightface/models/buffalo_l/det_10g.onnx")
-        self.recogniser = model_zoo.get_model(".insightface/models/buffalo_l/w600k_r50.onnx")
+            self.detector = model_zoo.get_model(".insightface/models/buffalo_l/det_10g.onnx")
+            self.recogniser = model_zoo.get_model(".insightface/models/buffalo_l/w600k_r50.onnx")
+        else:
+            self.detector = model_zoo.get_model(detector_path)
+            self.recogniser = model_zoo.get_model(recogniser_path)
 
         self.detector.prepare(ctx_id=0, input_size=detector_input_size)
         self.recogniser.prepare(ctx_id=0)
