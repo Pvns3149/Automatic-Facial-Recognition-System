@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 from app import create_app
-from backend.app.models import Sample #Change to class
+from app.models import Sample #Change to class
 
 # #Setup scheduler and task
 # def check_time():

@@ -53,7 +53,7 @@ const INITIAL_CLASSES = [
 ];
 
 function App() {
-  const [page, setPage] = useState('dashboard'); // 'dashboard' | 'classes' | 'support' | 'students'
+  const [page, setPage] = useState('dashboard'); // 'dashboard' | 'classes' | 'support' | 'students' | 'test'
   const [classes, setClasses] = useState(INITIAL_CLASSES);
 
   const handleNavClick = (target) => (e) => {

@@ -1,20 +1,49 @@
-import { useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { UNIVERSITY_WEEK1_START } from './data';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-function MyClassesPage({ classes }) {
-  const [selectedId, setSelectedId] = useState(classes[0]?.id ?? '');
+function MyClassesPage() {
+  const [classes, setClasses] = useState([]);
+  const [selectedId, setSelectedId] = useState('');
+  const [current, setCurrent] = useState(null);
 
   useEffect(() => {
-    if (!classes.length) {
-      setSelectedId('');
-      return;
+
+    //Retreive all classes assigned to the user 
+    const getClasses = async () => {
+      try{
+        const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: 1 }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+        if (!response.ok) {
+          throw new Error('Server connection error');
+        }
+        const data = await response.json();
+        setClasses(data.classes);
+        console.log('Return data:', data.classes);
+
+        //Set default selected ID 
+        if (data.classes.length > 0) {
+          setSelectedId(data.classes[0].id);
+        }
+      }
+
+      catch (err) {
+        console.error('Class retreival failed:', err)
+      }
     }
-    if (!classes.some((c) => c.id === selectedId)) {
-      setSelectedId(classes[0].id);
-    }
+    getClasses();
+    
+  }, [] );
+
+  
+
+  useEffect(() => {
+    console.log('Current change process being called: ', selectedId, classes);
+    // Update current whenever classes or selectedId changes
+    const selectedClass = classes.find((c) => c.id === parseInt(selectedId)) ?? classes[0];
+    setCurrent(selectedClass);
   }, [classes, selectedId]);
 
-  if (!classes.length) {
+  if (!classes.length || !current) {
     return (
       <main className="classes-main">
         <section className="classes-header">
@@ -27,11 +56,9 @@ function MyClassesPage({ classes }) {
     );
   }
 
-  const current = useMemo(
-    () => classes.find((c) => c.id === selectedId) ?? classes[0],
-    [classes, selectedId],
-  );
 
+  console.log('Current data:', current);
+  console.log('Slected ID:', selectedId);
   const present = Math.round(current.totalStudents * current.presentPercent);
   const absent = current.totalStudents - present;
   const presentPct = Math.round(current.presentPercent * 100);
@@ -76,7 +103,7 @@ function MyClassesPage({ classes }) {
           onChange={(e) => setSelectedId(e.target.value)}
         >
           {classes.map((cls) => {
-            const name = `${cls.subjectCode} – ${cls.subjectName}`;
+            const name = `${cls.subjectCode} – ${cls.subjectName} – ${cls.timeSlot}`;
             return (
               <option key={cls.id} value={cls.id}>
                 {name}
