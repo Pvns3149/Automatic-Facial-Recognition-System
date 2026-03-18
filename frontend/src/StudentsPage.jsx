@@ -1,16 +1,19 @@
-import { useMemo, useState } from 'react';
-import { INITIAL_STUDENTS } from './data';
-
+import { useMemo, useState, useEffect } from 'react';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+// CLASS ID HANDLING NOT COMPLETERD, CURRENTLY HARDCODED TO CLASS 3
 function StudentsPage() {
-  const [students, setStudents] = useState(INITIAL_STUDENTS);
+  const [students, setStudents] = useState([]);
   const [filters, setFilters] = useState({
     studentId: '',
     name: '',
-    week: '',
+    week: '1',
   });
   const [appliedFilters, setAppliedFilters] = useState(filters);
 
-  const activeWeek = appliedFilters.week ? Number(appliedFilters.week) : 1;
+  //Retreive all students assigned to the user
+  useEffect(() => {console.log(appliedFilters);getStudents();}, [appliedFilters] );
+
+  const activeWeek = appliedFilters.week 
 
   const filteredStudents = useMemo(() => {
     const idFilter = appliedFilters.studentId;
@@ -37,16 +40,38 @@ function StudentsPage() {
     setAppliedFilters(filters);
   };
 
-  const handleSetStatus = (studentId, status) => {
-    const week = activeWeek || 1;
-    setStudents((prev) =>
-      prev.map((student) => {
-        if (student.id !== studentId) return student;
-        const weeks = { ...(student.weeks || {}), [week]: status };
-        return { ...student, weeks };
-      }),
-    );
+  const handleSetStatus = async (studentId, status) => {
+    try{
+      const response = await fetch(`${API_BASE_URL}/changeAttendance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : studentId, classId : 3, week: activeWeek, attending: status }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+      if (!response.ok) {
+          throw new Error('Update failed');
+      }
+      // Refresh students after status change
+      await getStudents(); 
+    }   
+    catch (err) {
+      alert(err.message);
+    }
+
   };
+
+  //Get students based on given parameters
+  const getStudents = async () => {
+      try{
+        const response = await fetch(`${API_BASE_URL}/getStudents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : appliedFilters.id, name : appliedFilters.name, classId : 3, week: appliedFilters.week }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+        if (!response.ok) {
+          throw new Error('Server connection error');
+        }
+        const data = await response.json();
+        setStudents(data.students);
+        console.log('Return data:', data.students);
+
+      }
+
+      catch (err) {
+        console.error('Class retreival failed:', err)
+      }
+    };
 
   return (
     <main className="students-main">
@@ -102,14 +127,22 @@ function StudentsPage() {
               value={filters.week}
               onChange={handleFilterChange('week')}
             >
-              <option value="">Week 1</option>
+              <option value="0">All Weeks</option>
               {Array.from({ length: 13 }).map((_, index) => {
                 const weekNumber = index + 1;
-                return (
-                  <option key={weekNumber} value={weekNumber}>
-                    Week {weekNumber}
-                  </option>
-                );
+                // if (weekNumber === 0) {
+                //   return (
+                //     <option key={weekNumber} value={weekNumber}>
+                //       All Weeks
+                //     </option>
+                //   );
+                // }else {
+                  return (
+                    <option key={weekNumber} value={weekNumber}>
+                      Week {weekNumber}
+                    </option>
+                  );
+                //}
               })}
             </select>
           </div>
