@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
-
+from collections import defaultdict
 from app import db
-from app.models import Sample, Attendance, MyClasses, Class
+from app.models import Sample, Attendance, MyClasses, Class, Student
 
 
 api_bp = Blueprint("api", __name__)
@@ -21,26 +21,26 @@ def get_users():
 
 
 #Change attendance
-@api_bp.route("/change_attendance", methods=["POST"])
+@api_bp.route("/changeAttendance", methods=["POST"])
 def change_attendance():
 
     #Data receival and verification
     data = request.get_json()
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-
-    if not data.get("user_id") or not data.get("class_id") or not data.get("week") or not data.get("attending"):
-        return jsonify({"error": "user_id, class_id, week, and attendance are required"}), 400
+    if not data or not data.get("id") or not data.get("week") or not data.get("classId") or data.get("attending") == None:
+        return jsonify({"error": "Missing data"}), 400
 
     # Check if user exists
-    user = Attendance.query.filter_by(studentid = data["user_id"], classid = data["class_id"], weekheld = data["week"]).first()
+    user = Attendance.query.filter_by(studentid = data["id"], classid = data["classId"], weekheld = data["week"]).first()
     if not user:
-        return jsonify({"error": "User not found for given class and week"}), 404
+        return jsonify({"error": "User not found"}), 404
     
     #update attendance
-    user.presentstate = data["attending"]
+    if (data["attending"] == "present"):
+        user.presentstate = True        
+    else:
+        user.presentstate = False
     db.session.commit()
-    return jsonify({"message": "Attendance status updated successfully"})
+    return jsonify({"status":"attendance updated"}), 200
 
 
 #Get all assigned classes for a user for a given week
@@ -73,10 +73,67 @@ def get_classes():
             "presentPercent": round(studentCount(classDetails.classid, data["week"], True) / totalStd, 2) if totalStd > 0 else 0
         })
 
-    #Sort by Class ID
+    #Sort by Class ID fro easier search
     response.sort(key=lambda x: x["subjectCode"])
     
     return jsonify({"classes": response})
+
+
+#Get all assigned students for a user for a given week and class
+@api_bp.route("/getStudents", methods=["POST"])
+def get_students():
+    # Data receival and verification
+    data = request.get_json()
+    if not data.get("classId"):  
+        return jsonify({"error": "Class ID not provided"}), 400
+
+    print(data.get("week"))
+    class_id = data["classId"]
+
+  # Query attendance and student data
+    if (int(data.get("week")) == 0):
+        attendance_records = db.session.query(
+            Attendance.studentid,
+            Attendance.weekheld,
+            Attendance.presentstate,
+            Student.studentname,
+            Student.studentemail
+        ).join(Student, Attendance.studentid == Student.studentid).filter(
+            Attendance.classid == class_id,
+            Attendance.studentid == data["id"] if (data.get("id") != None) else True,
+            Student.studentname.ilike(f"%{data['name']}%") if (data.get("name") != None) else True
+        ).order_by(Attendance.studentid, Attendance.weekheld).all()
+    else:
+        attendance_records = db.session.query(
+            Attendance.studentid,
+            Attendance.weekheld,
+            Attendance.presentstate,
+            Student.studentname,
+            Student.studentemail
+        ).join(Student, Attendance.studentid == Student.studentid).filter(
+            Attendance.classid == class_id,
+            Attendance.weekheld == data["week"],
+            Attendance.studentid == data["id"] if (data.get("id") != None) else True,
+            Student.studentname.ilike(f"%{data['name']}%") if (data.get("name") != None) else True
+        ).order_by(Attendance.studentid, Attendance.weekheld).all()
+
+    # Process the results into the desired format
+    students = defaultdict(lambda: {"weeks": {}})
+    for record in attendance_records:
+        student_id = record.studentid
+        if student_id not in students:
+            students[student_id].update({
+                "id": record.studentid,
+                "email": record.studentemail,
+                "name": record.studentname,
+            })
+        students[student_id]["weeks"][record.weekheld] = "present" if record.presentstate else "absent"
+
+    # Convert to list
+    print(students)
+    response = list(students.values())
+    return jsonify({"students" : response})
+
 
 # Sample databse actions
 

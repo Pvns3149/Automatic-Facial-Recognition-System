@@ -103,7 +103,7 @@ function MyClassesPage() {
           onChange={(e) => setSelectedId(e.target.value)}
         >
           {classes.map((cls) => {
-            const name = `${cls.subjectCode} – ${cls.subjectName} – ${cls.timeSlot}`;
+            const name = `${cls.session} – ${cls.subjectCode} – ${cls.subjectName} – ${cls.timeSlot}`;
             return (
               <option key={cls.id} value={cls.id}>
                 {name}
@@ -115,7 +115,7 @@ function MyClassesPage() {
 
       <p className="classes-meta">
         <span className="classes-meta-name">
-          {current.subjectCode} – {current.subjectName}
+          {current.session} – {current.subjectCode} – {current.subjectName}
         </span>
         <span className="classes-meta-separator"> | </span>
         <span className="classes-meta-time">{current.timeSlot}</span>
