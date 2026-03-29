@@ -88,34 +88,29 @@ def get_students():
         return jsonify({"error": "Class ID not provided"}), 400
 
     print(data.get("week"))
-    class_id = data["classId"]
+
+    # Parse all other parameters
+    # Convert to Boolean masks
+    queried_class_id = (Attendance.classid == data["classId"])
+    queried_week_held = (Attendance.weekheld == int(data["week"])) if data.get("week") != None or int(data.get("week") != 0) else True # None or 0 means all weeks
+    queried_stud_id = (Attendance.studentid == data["id"]) if data.get("id") != None else True
+    queried_stud_name = Student.studentname.ilike(f"%{data['name'].strip()}%") if (data.get("name") != None and data.get("name").strip()) != "" else True # Empty string means no searching by name
+
+    print(queried_stud_name)
 
   # Query attendance and student data
-    if (int(data.get("week")) == 0):
-        attendance_records = db.session.query(
-            Attendance.studentid,
-            Attendance.weekheld,
-            Attendance.presentstate,
-            Student.studentname,
-            Student.studentemail
-        ).join(Student, Attendance.studentid == Student.studentid).filter(
-            Attendance.classid == class_id,
-            Attendance.studentid == data["id"] if (data.get("id") != None) else True,
-            Student.studentname.ilike(f"%{data['name']}%") if (data.get("name") != None) else True
-        ).order_by(Attendance.studentid, Attendance.weekheld).all()
-    else:
-        attendance_records = db.session.query(
-            Attendance.studentid,
-            Attendance.weekheld,
-            Attendance.presentstate,
-            Student.studentname,
-            Student.studentemail
-        ).join(Student, Attendance.studentid == Student.studentid).filter(
-            Attendance.classid == class_id,
-            Attendance.weekheld == data["week"],
-            Attendance.studentid == data["id"] if (data.get("id") != None) else True,
-            Student.studentname.ilike(f"%{data['name']}%") if (data.get("name") != None) else True
-        ).order_by(Attendance.studentid, Attendance.weekheld).all()
+    attendance_records = db.session.query(
+        Attendance.studentid,
+        Attendance.weekheld,
+        Attendance.presentstate,
+        Student.studentname,
+        Student.studentemail
+    ).join(Student, Attendance.studentid == Student.studentid).filter(
+        queried_class_id,
+        queried_week_held,
+        queried_stud_id,
+        queried_stud_name
+    ).order_by(Attendance.studentid, Attendance.weekheld).all()
 
     # Process the results into the desired format
     students = defaultdict(lambda: {"weeks": {}})
