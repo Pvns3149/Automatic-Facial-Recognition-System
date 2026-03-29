@@ -53,27 +53,59 @@ def get_classes():
         return jsonify({"error": "ID or week not provided"}), 400
 
     # Check if user exists and get id of all classes the user has access to
-    classId = MyClasses.query.filter_by(educatorid = data["id"]).all()
-    if not classId:
+    class_ids = MyClasses.query.with_entities(MyClasses.classid).filter_by(educatorid = data["id"]).all()
+    if not class_ids:
         return jsonify({"error": "No classes found for given user"}), 404
-    
-    #Format and send response with each class details
+    class_ids = set([id[0] for id in class_ids])
+
+    # Search for class information where its
+    # Attendance records exist for the selected week
+    class_records = db.session.query(
+        Class.classid,
+        Class.academicsession,
+        Class.subjectcode,
+        Class.subjectname,
+        Class.classstarttime,
+        Class.classendtime,
+        Class.classtype,
+        db.func.count().filter(Attendance.presentstate == True).label("present_count"),
+        db.func.count().label("total_count")
+    ).join(Attendance, Class.classid == Attendance.classid).filter(
+        Class.classid.in_(class_ids),
+        Attendance.weekheld == data["week"]
+    ).group_by(Class.classid,
+        Class.academicsession,
+        Class.subjectcode,
+        Class.subjectname,
+        Class.classstarttime,
+        Class.classendtime,
+        Class.classtype
+    ).all()
+
+    # Check for classes that were not returned
+    # due to its non-onccurrence in the selected week
+    returned_ids = set([record[0] for record in class_records])
+    non_returned_ids = list(class_ids - returned_ids)
+
+    # Recover these unreturned classes
+    non_occurring_class_records = Class.query.filter(Class.classid.in_(non_returned_ids)).all()
+    class_records = class_records + non_occurring_class_records
+
+    # Format and send response with each class details
     response = []
-    for c in classId:
-        classDetails = Class.query.filter_by(classid = c.classid).first()
-        totalStd = studentCount(classDetails.classid, data["week"], None)
+    for rec in class_records:
         response.append({
-            "id": classDetails.classid,
-            "session": classDetails.academicsession,
-            "subjectCode": classDetails.subjectcode,
-            "subjectName": classDetails.subjectname,
-            "timeSlot": classDetails.classstarttime + " - " + classDetails.classendtime,
-            "classType": classDetails.classtype,
-            "totalStudents": totalStd,
-            "presentPercent": round(studentCount(classDetails.classid, data["week"], True) / totalStd, 2) if totalStd > 0 else 0
+            "id": rec.classid,
+            "session": rec.academicsession,
+            "subjectCode": rec.subjectcode,
+            "subjectName": rec.subjectname,
+            "timeSlot": rec.classstarttime + " - " + rec.classendtime,
+            "classType": rec.classtype,
+            "totalStudents": rec.total_count if hasattr(rec, "total_count") else 0,
+            "presentStudents": rec.present_count if hasattr(rec, "present_count") else 0
         })
 
-    #Sort by Class ID fro easier search
+    # Sort by subject code for easier search
     response.sort(key=lambda x: x["subjectCode"])
     
     return jsonify({"classes": response})

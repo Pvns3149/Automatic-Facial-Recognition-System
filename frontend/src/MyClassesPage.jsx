@@ -59,9 +59,9 @@ function MyClassesPage() {
 
   console.log('Current data:', current);
   console.log('Slected ID:', selectedId);
-  const present = Math.round(current.totalStudents * current.presentPercent);
+  const present = current.presentStudents;
   const absent = current.totalStudents - present;
-  const presentPct = Math.round(current.presentPercent * 100);
+  const presentPct = Math.round(present / current.totalStudents * 100) || 0;
   const absentPct = 100 - presentPct;
 
   const computeTeachingWeek = () => {
