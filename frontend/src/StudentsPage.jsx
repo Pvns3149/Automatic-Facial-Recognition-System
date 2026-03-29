@@ -46,6 +46,9 @@ function StudentsPage() {
       if (!response.ok) {
           throw new Error('Update failed');
       }
+      else {
+        alert(`Status for student ${studentId} updated to ${status} for week ${activeWeek}`);
+      }
       // Refresh students after status change
       await getStudents(); 
     }   
@@ -148,8 +151,8 @@ function StudentsPage() {
           </div>
 
           <div className="students-filter-actions">
-            <button type="submit" className="btn btn-primary students-apply-button">
-              Apply
+            <button type="submit" className="btn btn-primary students-search-button">
+              Search
             </button>
           </div>
         </form>
