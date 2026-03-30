@@ -124,7 +124,7 @@ def get_students():
     # Parse all other parameters
     # Convert to Boolean masks
     queried_class_id = (Attendance.classid == data["classId"])
-    queried_week_held = (Attendance.weekheld == int(data["week"])) if data.get("week") != None or int(data.get("week") != 0) else True # None or 0 means all weeks
+    queried_week_held = (Attendance.weekheld == int(data["week"])) if (data.get("week") != None and int(data.get("week")) != 0) else True # None or 0 means all weeks
     queried_stud_id = (Attendance.studentid == data["id"]) if data.get("id") != None else True
     queried_stud_name = Student.studentname.ilike(f"%{data['name'].strip()}%") if (data.get("name") != None and data.get("name").strip()) != "" else True # Empty string means no searching by name
 
