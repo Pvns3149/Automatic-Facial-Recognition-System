@@ -1,6 +1,6 @@
 import { use, useEffect, useState } from 'react';
 import { UNIVERSITY_WEEK1_START } from './data';
-import {computeTeachingWeek, ChangeClass} from './ClassUtils';
+import {computeTeachingWeek, ChangeClass, capitalizeFirstLetter} from './ClassUtils';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 function MyClassesPage() {
@@ -85,7 +85,7 @@ function MyClassesPage() {
           onChange={(e) => setSelectedId(e.target.value)}
         >
           {classes.map((cls) => {
-            const name = `${cls.session} – ${cls.subjectCode} – ${cls.subjectName} – ${cls.timeSlot}`;
+            const name = `${cls.session} – ${cls.subjectCode} – ${cls.subjectName} – ${capitalizeFirstLetter(cls.day)} – ${cls.timeSlot}`;
             return (
               <option key={cls.id} value={cls.id}>
                 {name}

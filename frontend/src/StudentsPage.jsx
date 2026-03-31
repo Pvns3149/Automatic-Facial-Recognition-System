@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import {ChangeClass} from './ClassUtils';
+import {ChangeClass, capitalizeFirstLetter} from './ClassUtils';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 // CLASS ID HANDLING NOT COMPLETERD, CURRENTLY HARDCODED TO CLASS 3
@@ -22,7 +22,8 @@ function StudentsPage() {
     "classType" :  "Lecture",
     "subjectCode" : "CSCI323",
     "subjectName" : "Modern Artificial Intelligence",
-    "timeSlot" : "2:30 PM - 4:30 PM"
+    "timeSlot" : "2:30 PM - 4:30 PM",
+    "day" : "FRI"
   },
   {
     "id": 1,
@@ -30,7 +31,8 @@ function StudentsPage() {
     "classType": "Lecture",
     "subjectCode": "ISIT312",
     "subjectName": "Big Data Management",
-    "timeSlot": "4:30 PM - 6:30 PM"
+    "timeSlot": "4:30 PM - 6:30 PM",
+    "day": "TUE"
   },
   {
     "id": 2,
@@ -38,7 +40,9 @@ function StudentsPage() {
     "classType": "Tutorial",
     "subjectCode": "ISIT312",
     "subjectName": "Big Data Management",
-    "timeSlot": "10:30 AM - 12:30 PM"
+    "timeSlot": "10:30 AM - 12:30 PM",
+    "day": "MON"
+    
   }
 ]);
 
@@ -150,7 +154,7 @@ function StudentsPage() {
             onChange={(e) => setSelectedId(e.target.value)}
           >
             {classList.map((cls) => {
-              const name = `${cls.session} – ${cls.subjectCode} – ${cls.subjectName} – ${cls.timeSlot}`;
+              const name = `${cls.session} – ${cls.subjectCode} – ${cls.subjectName} – ${capitalizeFirstLetter(cls.day)} – ${cls.timeSlot}`;
               return (
                 <option key={cls.id} value={cls.id}>
                   {name}

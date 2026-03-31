@@ -4,6 +4,7 @@ import SupportPage from './SupportPage';
 import MyClassesPage from './MyClassesPage';
 import StudentsPage from './StudentsPage';
 import TestPage from './test';
+import DashboardPage2 from './dashboard2';
 
 const INITIAL_CLASSES = [
   {
@@ -53,7 +54,7 @@ const INITIAL_CLASSES = [
 ];
 
 function App() {
-  const [page, setPage] = useState('dashboard'); // 'dashboard' | 'classes' | 'support' | 'students' | 'test'
+  const [page, setPage] = useState('dashboard'); // 'dashboard' | 'classes' | 'support' | 'students' | 'test' | 'dashboard2'
   const [classes, setClasses] = useState(INITIAL_CLASSES);
 
   const handleNavClick = (target) => (e) => {
@@ -112,6 +113,18 @@ function App() {
               <img src="/assets/tuition.png" alt="" className="nav-thumbnail" />
               <span className="nav-label">My classes</span>
             </a>
+
+            <a
+              href="#dashboard2"
+              className={`nav-item nav-item-dashboard2${
+                page === 'dashboard2' ? ' is-active' : ''
+              }`}
+              onClick={handleNavClick('dashboard2')}
+            >
+              <img src="/assets/icon-dashboard.svg" alt="" className="nav-thumbnail" />
+              <span className="nav-label">dashboard2</span>
+            </a>
+
 
             <a
               href="#students"
@@ -184,6 +197,11 @@ function App() {
           <MyClassesPage classes={classes.filter((cls) => cls.assigned)} />
         )}
         {page === 'students' && <StudentsPage />}
+        {page === 'dashboard2' && <DashboardPage2 
+          classes={classes}
+          onAssignClass={handleAssignClass}
+          onRemoveClass={handleRemoveClass}
+        />} 
         {page === 'support' && <SupportPage />}
          {page === 'test' && <TestPage />}  {/* REMOVE AFTER TESTING */}
       </div>
