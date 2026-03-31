@@ -1,4 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
+import {ChangeClass} from './ClassUtils';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 // CLASS ID HANDLING NOT COMPLETERD, CURRENTLY HARDCODED TO CLASS 3
 function StudentsPage() {
@@ -9,9 +11,84 @@ function StudentsPage() {
     week: '1',
   });
   const [appliedFilters, setAppliedFilters] = useState(filters);
+  const [selectedId, setSelectedId] = useState('');
+  const [current, setCurrent] = useState(null);
+  
+  //Change this to global
+  const [classList, setClassList] = useState([
+  {
+    "id": 3,
+    "session": "Autumn 2026",
+    "classType" :  "Lecture",
+    "subjectCode" : "CSCI323",
+    "subjectName" : "Modern Artificial Intelligence",
+    "timeSlot" : "2:30 PM - 4:30 PM"
+  },
+  {
+    "id": 1,
+    "session": "Spring 2025",
+    "classType": "Lecture",
+    "subjectCode": "ISIT312",
+    "subjectName": "Big Data Management",
+    "timeSlot": "4:30 PM - 6:30 PM"
+  },
+  {
+    "id": 2,
+    "session": "Spring 2025",
+    "classType": "Tutorial",
+    "subjectCode": "ISIT312",
+    "subjectName": "Big Data Management",
+    "timeSlot": "10:30 AM - 12:30 PM"
+  }
+]);
 
-  //Retreive all students assigned to the user
-  useEffect(() => {console.log(appliedFilters);getStudents();}, [appliedFilters] );
+//Get students based on given parameters
+  const getStudents = async () => {
+    
+      try{
+        console.log(current.id)
+        const response = await fetch(`${API_BASE_URL}/getStudents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : appliedFilters.id, name : appliedFilters.name, classId : current?.id, week: appliedFilters.week }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+        if (!response.ok) {
+          throw new Error('Server connection error');
+        }
+        const data = await response.json();
+        setStudents(data.students);
+        console.log('Return data:', data.students);
+
+      }
+
+      catch (err) {
+        console.error('Class retreival failed:', err)
+      }
+    };
+
+
+  //Update classid selected
+  useEffect(() => {
+    setCurrent(ChangeClass(selectedId, classList));
+  }, [selectedId, classList]);
+
+  //Fetch Std list
+  useEffect(() => {
+    if (current) {
+      console.log(appliedFilters);
+      getStudents();
+    }
+  }, [appliedFilters, current]);
+
+  //Default display if no classes assigned to user
+  if (!classList.length ) {
+    return (
+      <main className="classes-main">
+        <section className="classes-header">
+          <h2 className="classes-title">My Classes</h2>
+          <p className="classes-subtitle">
+            No classes have been added from the dashboard yet.
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   const activeWeek = appliedFilters.week 
 
@@ -42,7 +119,7 @@ function StudentsPage() {
 
   const handleSetStatus = async (studentId, status) => {
     try{
-      const response = await fetch(`${API_BASE_URL}/changeAttendance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : studentId, classId : 3, week: activeWeek, attending: status }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+      const response = await fetch(`${API_BASE_URL}/changeAttendance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : studentId, classId : current?.id, week: activeWeek, attending: status }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
       if (!response.ok) {
           throw new Error('Update failed');
       }
@@ -58,31 +135,30 @@ function StudentsPage() {
 
   };
 
-  //Get students based on given parameters
-  const getStudents = async () => {
-      try{
-        const response = await fetch(`${API_BASE_URL}/getStudents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : appliedFilters.id, name : appliedFilters.name, classId : 3, week: appliedFilters.week }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
-        if (!response.ok) {
-          throw new Error('Server connection error');
-        }
-        const data = await response.json();
-        setStudents(data.students);
-        console.log('Return data:', data.students);
-
-      }
-
-      catch (err) {
-        console.error('Class retreival failed:', err)
-      }
-    };
-
   return (
     <main className="students-main">
       <section className="students-header">
         <h2 className="students-title">Students</h2>
-        <p className="students-subtitle">
-          CSIT123 Spring 2025 | MON 8:30 AM - 10:30 AM
-        </p>
+        <section className="classes-select-row">
+          <label htmlFor="class-select" className="classes-select-label">
+            Class
+          </label>
+          <select
+            id="class-select"
+            className="classes-select"
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
+          >
+            {classList.map((cls) => {
+              const name = `${cls.session} – ${cls.subjectCode} – ${cls.subjectName} – ${cls.timeSlot}`;
+              return (
+                <option key={cls.id} value={cls.id}>
+                  {name}
+                </option>
+              );
+            })}
+          </select>
+        </section>
       </section>
 
       <section className="students-filters">

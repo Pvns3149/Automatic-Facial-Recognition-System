@@ -1,8 +1,10 @@
 import { use, useEffect, useState } from 'react';
 import { UNIVERSITY_WEEK1_START } from './data';
+import {computeTeachingWeek, ChangeClass} from './ClassUtils';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 function MyClassesPage() {
+  const startWeek = UNIVERSITY_WEEK1_START;
   const [classes, setClasses] = useState([]);
   const [selectedId, setSelectedId] = useState('');
   const [current, setCurrent] = useState(null);
@@ -37,10 +39,7 @@ function MyClassesPage() {
   
 
   useEffect(() => {
-    console.log('Current change process being called: ', selectedId, classes);
-    // Update current whenever classes or selectedId changes
-    const selectedClass = classes.find((c) => c.id === parseInt(selectedId)) ?? classes[0];
-    setCurrent(selectedClass);
+    setCurrent(ChangeClass(selectedId, classes));
   }, [classes, selectedId]);
 
   if (!classes.length || !current) {
@@ -64,24 +63,7 @@ function MyClassesPage() {
   const presentPct = Math.round(present / current.totalStudents * 100) || 0;
   const absentPct = 100 - presentPct;
 
-  const computeTeachingWeek = () => {
-    const today = new Date();
-    const weekMs = 7 * 24 * 60 * 60 * 1000;
-    const diffMs = today - UNIVERSITY_WEEK1_START;
-
-    // If we're before the term starts, clamp to Week 1.
-    if (diffMs <= 0) {
-      return 1;
-    }
-
-    const diffWeeks = Math.floor(diffMs / weekMs);
-    const rawWeek = diffWeeks + 1; // Week 1 during the first 7 days, Week 2 in the next 7, etc.
-
-    // Counter goes up to Week 13 and then stays there.
-    return rawWeek > 13 ? 13 : rawWeek;
-  };
-
-  const teachingWeek = computeTeachingWeek();
+  const teachingWeek = computeTeachingWeek(startWeek);
 
   return (
     <main className="classes-main">
