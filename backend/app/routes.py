@@ -1,12 +1,17 @@
+import os
+from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
 from collections import defaultdict
 from app import db
 from app.models import Sample, Attendance, MyClasses, Class, Student
 from datetime import datetime
+from app.facemodels import FacialRecognitionModel
 
+
+load_dotenv()
 
 api_bp = Blueprint("api", __name__)
-
+face_model = FacialRecognitionModel(os.environ.get("INSIGHTFACE_ROOT"))
 
 #Connection test
 @api_bp.route("/health", methods=["GET"])
@@ -20,6 +25,54 @@ def get_users():
     users = Sample.query.all()
     return jsonify({"users": [user.to_dict() for user in users]})
 
+
+#Update attendance
+# @api_bp.route("/updateAttendance", methods=["POST"])
+def update_attendance_from_photo():
+    import base64
+    # data = request.get_json()
+
+    # testing
+    with open("D:\\facial-recognition-fyp\\member-pics\\eric2.jpg", "rb") as f:
+        im_b64 = base64.b64encode(f.read())
+
+    data = {"id": 2, "week": 2, "group_photo": im_b64}
+
+    if not data or not data.get("group_photo") or not data.get("id") or not data.get("week"):
+        return jsonify({"error": "Missing data"}), 400
+
+    student_who_should_attend = db.session.query(Attendance).join(
+        Student, Attendance.studentid == Student.studentid
+    ).filter(
+        Attendance.classid == data["id"],
+        Attendance.weekheld == data["week"],
+        Attendance.presentstate == False
+    ).all()
+
+    print(str(db.session.query(Attendance).join(
+        Student, Attendance.studentid == Student.studentid
+    ).filter(
+        Attendance.classid == data["id"],
+        Attendance.weekheld == data["week"],
+        Attendance.presentstate == False
+    )))
+
+    if not student_who_should_attend:
+        print("nope")
+        return jsonify({"status":"All students are already marked present."}), 200
+
+    query_emb = face_model.get_embeddings(data["group_photo"])
+    id_who_should_attend = [a.studentid for a in student_who_should_attend]
+    gallery_emb = [a.student.refembedding for a in student_who_should_attend]
+
+    ids_to_mark_attendance = face_model.find_match(id_who_should_attend, gallery_emb, query_emb, 0.5)
+
+    for row in student_who_should_attend:
+        if row.studentid in ids_to_mark_attendance:
+            row.presentstate = True
+
+    db.session.commit()
+    return jsonify({"status":"attendances updated"}), 200
 
 #Change attendance
 @api_bp.route("/changeAttendance", methods=["POST"])
