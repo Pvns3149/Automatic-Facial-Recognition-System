@@ -97,142 +97,106 @@ def change_attendance():
     return jsonify({"status":"attendance updated"}), 200
 
 
+#Get the class happening right now
+@api_bp.route("/getDashboardClass", methods=["POST"])
+def get_dashboard_class():
+
+    #Data receival
+    data = request.get_json()
+    class_ids = get_classes_by_educator_id(data)
+
+    current_time = datetime.fromisoformat(data["time"].replace("Z", "+00:00"))
+    current_day = current_time.strftime("%a").upper()
+
+    class_records = Class.query.filter(Class.classid.in_(class_ids), Class.academicsession == data["session"], Class.classdayofweek == current_day).all()
+    
+    # Loop through every class, find class that matches the current time
+    for class_record in class_records:
+
+        class_start = datetime.strptime(class_record.classstarttime, "%I:%M %p")
+        class_end = datetime.strptime(class_record.classendtime, "%I:%M %p")
+
+        #Make backend timezone same as frontend timezone for correct comparison
+        class_start = current_time.astimezone().replace(hour=class_start.hour, minute=class_start.minute, second=0, microsecond=0)
+        class_end = current_time.astimezone().replace(hour=class_end.hour, minute=class_end.minute, second=0, microsecond=0)
+
+        if class_start < current_time and class_end > current_time:
+            print ("Class found " + str(class_record.classid))
+            class_record = db.session.query(
+                Class.classid,
+                Class.academicsession,
+                Class.subjectcode,
+                Class.subjectname,
+                Class.classstarttime,
+                Class.classendtime,
+                Class.classtype,
+                Class.classdayofweek,
+                db.func.count().filter(Attendance.presentstate == True).label("present_count"),
+                db.func.count().label("total_count")
+            ).join(Attendance, Class.classid == Attendance.classid).filter(
+                Class.classid == class_record.classid,
+                Attendance.weekheld == data["week"]
+            ).group_by(Class.classid,
+                Class.academicsession,
+                Class.subjectcode,
+                Class.subjectname,
+                Class.classstarttime,
+                Class.classendtime,
+                Class.classtype
+            ).first()
+
+            print("Class record found " + str(class_record.classid))
+
+            response = {
+                "id": class_record.classid,
+                "session": class_record.academicsession,
+                "subjectCode": class_record.subjectcode,
+                "subjectName": class_record.subjectname,
+                "timeSlot": class_record.classstarttime + " - " + class_record.classendtime,
+                "classType": class_record.classtype,
+                "totalStudents": class_record.total_count,
+                "presentStudents": class_record.present_count,
+                "day": class_record.classdayofweek
+            }
+            print(response)
+            print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+            
+            return jsonify({"class": response})
+        
+    # Failure to find any classes
+    return jsonify({"error": "No classes happening now"}), 500
+
+
 #Get all assigned classes for a user for a given week
 @api_bp.route("/getClasses", methods=["POST"])
 def get_classes():
 
-    #Data receival and verification
+    #Data receival
     data = request.get_json()
-    if not data or not data.get("id") or not data.get("week"): #WEEK DATA SHOULD BE IN COOKIE ON LOGIN
-        return jsonify({"error": "ID or week not provided"}), 400
+    class_ids = get_classes_by_educator_id(data)
 
-    # Check if user exists and get id of all classes the user has access to
-    class_ids = MyClasses.query.with_entities(MyClasses.classid).filter_by(educatorid = data["id"]).all()
-    if not class_ids:
-        return jsonify({"error": "No classes found for given user"}), 404
+    # Retrieve class information
+    class_records = Class.query.filter(Class.classid.in_(class_ids)).all()
+
+    # Format and send response with each class details
+    response = []
+    for rec in class_records:
+        response.append({
+            "id": rec.classid,
+            "session": rec.academicsession,
+            "subjectCode": rec.subjectcode,
+            "subjectName": rec.subjectname,
+            "timeSlot": rec.classstarttime + " - " + rec.classendtime,
+            "classType": rec.classtype,
+            "day": rec.classdayofweek
+        })
+
+    # Sort by subject code for easier search
+    response.sort(key=lambda x: x["subjectCode"])
+
+    print(response)
     
-    if data.get("dashboard") == True:
-
-        print("DASHBOARD DASHBOARD DASHBOARD")
-        
-
-        class_ids = [id[0] for id in class_ids]
-        current_time = datetime.fromisoformat(data["time"].replace("Z", "+00:00"))
-        current_day = current_time.strftime("%a").upper()
-
-        class_data = Class.query.filter(Class.classid.in_(class_ids), Class.academicsession == data["session"], Class.classdayofweek == current_day).all()
-        for cls in class_data:
-            class_start = datetime.strptime(cls.classstarttime, "%I:%M %p")
-            class_end = datetime.strptime(cls.classendtime, "%I:%M %p")
-
-            #Make db timezone same as sys timezone
-            class_start = current_time.astimezone().replace(hour=class_start.hour, minute=class_start.minute, second=0, microsecond=0)
-            class_end = current_time.astimezone().replace(hour=class_end.hour, minute=class_end.minute, second=0, microsecond=0)
-
-            if class_start < current_time and class_end > current_time:
-                print ("Class found " + str(cls.classid))
-                class_record = db.session.query(
-                    Class.classid,
-                    Class.academicsession,
-                    Class.subjectcode,
-                    Class.subjectname,
-                    Class.classstarttime,
-                    Class.classendtime,
-                    Class.classtype,
-                    Class.classdayofweek,
-                    db.func.count().filter(Attendance.presentstate == True).label("present_count"),
-                    db.func.count().label("total_count")
-                ).join(Attendance, Class.classid == Attendance.classid).filter(
-                    Class.classid == cls.classid,
-                    Attendance.weekheld == data["week"]
-                ).group_by(Class.classid,
-                    Class.academicsession,
-                    Class.subjectcode,
-                    Class.subjectname,
-                    Class.classstarttime,
-                    Class.classendtime,
-                    Class.classtype
-                ).first()
-
-                print("Class record found " + str(class_record.classid))
-
-
-                response = {
-                    "id": class_record.classid,
-                    "session": class_record.academicsession,
-                    "subjectCode": class_record.subjectcode,
-                    "subjectName": class_record.subjectname,
-                    "timeSlot": class_record.classstarttime + " - " + class_record.classendtime,
-                    "classType": class_record.classtype,
-                    "totalStudents": class_record.total_count,
-                    "presentStudents": class_record.present_count,
-                    "day": class_record.classdayofweek
-                }
-                print(response)
-                print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
-                
-                return jsonify({"class": response})
-    
-    else:
-
-        # Search for class information where its
-        # Attendance records exist for the selected week
-        class_records = db.session.query(
-            Class.classid,
-            Class.academicsession,
-            Class.subjectcode,
-            Class.subjectname,
-            Class.classstarttime,
-            Class.classendtime,
-            Class.classtype,
-            Class.classdayofweek,
-            db.func.count().filter(Attendance.presentstate == True).label("present_count"),
-            db.func.count().label("total_count")
-        ).join(Attendance, Class.classid == Attendance.classid).filter(
-            Class.classid.in_(class_ids),
-            Attendance.weekheld == data["week"]
-        ).group_by(Class.classid,
-            Class.academicsession,
-            Class.subjectcode,
-            Class.subjectname,
-            Class.classstarttime,
-            Class.classendtime,
-            Class.classtype
-        ).all()
-
-
-        # Check for classes that were not returned
-        # due to its non-onccurrence in the selected week
-        returned_ids = set([record[0] for record in class_records])
-        non_returned_ids = list(class_ids - returned_ids)
-
-        # Recover these unreturned classes
-        non_occurring_class_records = Class.query.filter(Class.classid.in_(non_returned_ids)).all()
-        class_records = class_records + non_occurring_class_records
-
-        # Format and send response with each class details
-        response = []
-        for rec in class_records:
-            response.append({
-                "id": rec.classid,
-                "session": rec.academicsession,
-                "subjectCode": rec.subjectcode,
-                "subjectName": rec.subjectname,
-                "timeSlot": rec.classstarttime + " - " + rec.classendtime,
-                "classType": rec.classtype,
-                "totalStudents": rec.total_count if hasattr(rec, "total_count") else 0,
-                "presentStudents": rec.present_count if hasattr(rec, "present_count") else 0,
-                "day": rec.classdayofweek
-            })
-
-        # Sort by subject code for easier search
-        response.sort(key=lambda x: x["subjectCode"])
-        
-        return jsonify({"classes": response})
-
-    print("error")
-    #Default return for unexpected cases
-    return jsonify({"error": "No dash bool prov"}), 500
+    return jsonify({"classes": response})
 
 
 #Get all assigned students for a user for a given week and class
@@ -350,9 +314,23 @@ def get_students():
 
 #     return jsonify({"message": "User deleted successfully"})
 
+
+# Helper functions
 def studentCount(class_id, week, present : None ):
     if present != None:
         count = Attendance.query.filter_by(classid = class_id, weekheld = week, presentstate = present).count()
     else:
         count = Attendance.query.filter_by(classid = class_id, weekheld = week).count()
     return count
+
+def get_classes_by_educator_id(data):
+    #Data verification
+    if not data or not data.get("id") or not data.get("week"): #WEEK DATA SHOULD BE IN COOKIE ON LOGIN
+        return jsonify({"error": "ID or week not provided"}), 400
+    
+    # Check if user exists and get id of all classes the user has access to
+    class_ids = MyClasses.query.with_entities(MyClasses.classid).filter_by(educatorid = data["id"]).all()
+    if not class_ids:
+        return jsonify({"error": "No classes found for given user"}), 404
+    
+    return [id[0] for id in class_ids]

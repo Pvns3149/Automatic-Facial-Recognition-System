@@ -29,10 +29,10 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
   useEffect(() => {
 
     //Retreive currently runing class
-    const getClasses = async () => {
+    const getDashboardClass = async () => {
         try{
         //const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: currentWeek, dashboard: true, session: "Autumn " + year, time: isoString }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
-        const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: 3, dashboard: true, session: "Autumn " + year, time: isoString }) }) //test to set Friday as current date
+        const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: 3, dashboard: true, session: "Autumn " + year, time: isoString }) }) //test to set Friday as current date
         if (!response.ok) {
             throw new Error('Server connection error');
         }
@@ -45,7 +45,7 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
         console.error('Class retreival failed:', err)
         }
     }
-    getClasses();
+    getDashboardClass();
       
   }, [] );
   

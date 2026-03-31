@@ -11,40 +11,42 @@ function StudentsPage() {
     week: '1',
   });
   const [appliedFilters, setAppliedFilters] = useState(filters);
+  const [classes, setClasses] = useState([]);
   const [selectedId, setSelectedId] = useState('');
   const [current, setCurrent] = useState(null);
   
   //Change this to global
-  const [classList, setClassList] = useState([
-  {
-    "id": 3,
-    "session": "Autumn 2026",
-    "classType" :  "Lecture",
-    "subjectCode" : "CSCI323",
-    "subjectName" : "Modern Artificial Intelligence",
-    "timeSlot" : "2:30 PM - 4:30 PM",
-    "day" : "FRI"
-  },
-  {
-    "id": 1,
-    "session": "Spring 2025",
-    "classType": "Lecture",
-    "subjectCode": "ISIT312",
-    "subjectName": "Big Data Management",
-    "timeSlot": "4:30 PM - 6:30 PM",
-    "day": "TUE"
-  },
-  {
-    "id": 2,
-    "session": "Spring 2025",
-    "classType": "Tutorial",
-    "subjectCode": "ISIT312",
-    "subjectName": "Big Data Management",
-    "timeSlot": "10:30 AM - 12:30 PM",
-    "day": "MON"
+//   const [classList, setClassList] = useState([
+//   {
+//     "id": 3,
+//     "session": "Autumn 2026",
+//     "classType" :  "Lecture",
+//     "subjectCode" : "CSCI323",
+//     "subjectName" : "Modern Artificial Intelligence",
+//     "timeSlot" : "2:30 PM - 4:30 PM",
+//     "day" : "FRI"
+//   },
+//   {
+//     "id": 1,
+//     "session": "Spring 2025",
+//     "classType": "Lecture",
+//     "subjectCode": "ISIT312",
+//     "subjectName": "Big Data Management",
+//     "timeSlot": "4:30 PM - 6:30 PM",
+//     "day": "TUE"
+//   },
+//   {
+//     "id": 2,
+//     "session": "Spring 2025",
+//     "classType": "Tutorial",
+//     "subjectCode": "ISIT312",
+//     "subjectName": "Big Data Management",
+//     "timeSlot": "10:30 AM - 12:30 PM",
+//     "day": "MON"
     
-  }
-]);
+//   }
+//     // getClasses()
+// ]);
 
 //Get students based on given parameters
   const getStudents = async () => {
@@ -66,11 +68,36 @@ function StudentsPage() {
       }
     };
 
+  //Retreive all classes assigned to the user 
+  const getClasses = async () => {
+    try{
+      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: 1 }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+      if (!response.ok) {
+        throw new Error('Server connection error');
+      }
+      const data = await response.json();
+      setClasses(data.classes);
+      console.log('Return data:', data.classes);
+
+      //Set default selected ID 
+      if (data.classes.length > 0) {
+        setSelectedId(data.classes[0].id);
+      }
+    }
+
+    catch (err) {
+      console.error('Class retreival failed:', err)
+    }
+  }
+
+  useEffect(() => {
+    getClasses()
+  }, []);
 
   //Update classid selected
   useEffect(() => {
-    setCurrent(ChangeClass(selectedId, classList));
-  }, [selectedId, classList]);
+    setCurrent(ChangeClass(selectedId, classes));
+  }, [selectedId, classes]);
 
   //Fetch Std list
   useEffect(() => {
@@ -80,19 +107,6 @@ function StudentsPage() {
     }
   }, [appliedFilters, current]);
 
-  //Default display if no classes assigned to user
-  if (!classList.length ) {
-    return (
-      <main className="classes-main">
-        <section className="classes-header">
-          <h2 className="classes-title">My Classes</h2>
-          <p className="classes-subtitle">
-            No classes have been added from the dashboard yet.
-          </p>
-        </section>
-      </main>
-    );
-  }
 
   const activeWeek = appliedFilters.week 
 
@@ -139,6 +153,20 @@ function StudentsPage() {
 
   };
 
+    //Default display if no classes assigned to user
+  if (!classes.length ) {
+    return (
+      <main className="classes-main">
+        <section className="classes-header">
+          <h2 className="classes-title">Students</h2>
+          <p className="classes-subtitle">
+            No classes have been added from the dashboard yet.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="students-main">
       <section className="students-header">
@@ -153,7 +181,7 @@ function StudentsPage() {
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
           >
-            {classList.map((cls) => {
+            {classes.map((cls) => {
               const name = `${cls.session} – ${cls.subjectCode} – ${cls.subjectName} – ${capitalizeFirstLetter(cls.day)} – ${cls.timeSlot}`;
               return (
                 <option key={cls.id} value={cls.id}>
