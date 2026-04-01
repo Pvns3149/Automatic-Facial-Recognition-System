@@ -6,6 +6,7 @@ from app import db
 from app.models import Sample, Attendance, MyClasses, Class, Student
 from datetime import datetime
 from app.facemodels import FacialRecognitionModel
+from zoneinfo import ZoneInfo
 
 
 load_dotenv()
@@ -105,6 +106,7 @@ def get_dashboard_class():
     data = request.get_json()
     class_ids = get_classes_by_educator_id(data)
 
+    # Frontend always return UTC+0 at the time of interacting with the dashboard
     current_time = datetime.fromisoformat(data["time"].replace("Z", "+00:00"))
     current_day = current_time.strftime("%a").upper()
 
@@ -113,12 +115,14 @@ def get_dashboard_class():
     # Loop through every class, find class that matches the current time
     for class_record in class_records:
 
+        # Get start and end times as returned from class records metadata
         class_start = datetime.strptime(class_record.classstarttime, "%I:%M %p")
         class_end = datetime.strptime(class_record.classendtime, "%I:%M %p")
 
-        #Make backend timezone same as frontend timezone for correct comparison
-        class_start = current_time.astimezone().replace(hour=class_start.hour, minute=class_start.minute, second=0, microsecond=0)
-        class_end = current_time.astimezone().replace(hour=class_end.hour, minute=class_end.minute, second=0, microsecond=0)
+        # Turn start and end times' date (maintaining hour and minutes) field to reflect the current date of current_time from the frontend
+        # Set start and end times' time zone to Sydney time, consistent with the uni's time zone
+        class_start = current_time.astimezone(ZoneInfo("Australia/Sydney")).replace(hour=class_start.hour, minute=class_start.minute, second=0, microsecond=0)
+        class_end = current_time.astimezone(ZoneInfo("Australia/Sydney")).replace(hour=class_end.hour, minute=class_end.minute, second=0, microsecond=0)
 
         if class_start < current_time and class_end > current_time:
             print ("Class found " + str(class_record.classid))
