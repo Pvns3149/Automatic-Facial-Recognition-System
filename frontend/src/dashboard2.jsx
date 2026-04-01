@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { UNIVERSITY_WEEK1_START } from './data';
 import {computeTeachingWeek, capitalizeFirstLetter} from './ClassUtils';
 
-function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
+function DashboardPage2() {
   const today = new Date();
 
   //test friday date
@@ -16,39 +16,191 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth()); // 0-11
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
   
   const startWeek = UNIVERSITY_WEEK1_START;
   const [currentClass, setClass] = useState([]);
-  // const [current, setCurrent] = useState(null);
-
-
+  const [assignedClasses, setAssignedClasses] = useState([]);
+  const [allClasses, setAllClasses] = useState([]);
   const currentWeek = computeTeachingWeek(startWeek);
-
-  useEffect(() => {
-
-    //Retreive currently runing class
-    const getDashboardClass = async () => {
-        try{
-        //const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: currentWeek, dashboard: true, session: "Autumn " + year, time: isoString }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
-        const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: 3, dashboard: true, session: "Autumn " + year, time: isoString }) }) //test to set Friday as current date
+  
+  //Function to remove classes
+  const onRemoveClass = async (classId, className, classCode) => {
+    try{
+        const response = await fetch(`${API_BASE_URL}/removeClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id: "LEC001", classId: classId }) })    
         if (!response.ok) {
             throw new Error('Server connection error');
         }
-        const data = await response.json();
-        setClass(data.class);
-        console.log('Return data:', data.class);
+
+        //Inform user of success
+        alert(`${classCode} - ${className} removed successfully`);
+        handleCloseRemoveModal();
+        getUserClasses();
+
+      }
+        catch (err) {
+        console.error('Class update failed:', err)
         }
 
-        catch (err) {
-        console.error('Class retreival failed:', err)
+  };
+
+  //Function to add classes
+  const onAssignClass = async (classId, className, classCode) => {
+    try{
+        const response = await fetch(`${API_BASE_URL}/addClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id: "LEC001", classId: classId }) }) 
+        if (response.status === 409) {
+          alert(`You are already assigned to ${classCode} - ${className}`);
+          return;
         }
-    }
-    getDashboardClass();
-      
-  }, [] );
+        
+        if (!response.ok) {
+            throw new Error('Server connection error');
+        }
+
+        //Inform user of success
+        alert(`${classCode} - ${className} added successfully`);
+        handleCloseModal();
+        getUserClasses();
+      }
+        catch (err) {
+        console.error('Class update failed:', err)
+        }
+
+  };
+
+
+  //Retreive assigned classes
+  const getUserClasses = async () => {
+      try{
+      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: 3}) }) //test to set Friday as current date
+      const data = await response.json();
+      setAssignedClasses(data.classes);
+      console.log('Return User classes data:', data.classes);
+      }
+
+      catch (err) {
+      console.error('Class retreival failed:', err)
+      }
+  }
+
   
+  //Retreive all classes
+  const getAllClasses = async () => {
+    console.log("Get all classes list")
+  
+    try{
+    const response = await fetch(`${API_BASE_URL}/getAllClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify() }) 
+    if (!response.ok) {
+        throw new Error('Server connection error');
+    }
+    const data = await response.json();
+    setAllClasses(data.classes);
+    console.log('All classes return data:', data.classes);
+    }
+
+    catch (err) {
+    console.error('Class retreival failed:', err)
+    }
+  }
+
+  //submit attendannce image to backend for processing
+  const TakeAttendance = async (img) => {
+    if(window.confirm("Are you sure you want to submit attendance for this class? All students not currently in class will receive a non-attendance notification email.")){
+    
+      console.log("Submitting attendance with image data:", img);
+      try{
+        const response = await fetch(`${API_BASE_URL}/updateAttendance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id : currentClass.id, week : 3, group_photo: img, className: currentClass.subjectName, classCode: currentClass.subjectCode, timeSlot: currentClass.timeSlot}) }) 
+        if (response.ok) {
+            alert('Attendance taken successfully');
+        }else {
+          throw new Error('Server connection error');
+        }
+      }
+      catch (err) {
+        console.error('Attendance submission failed:', err)
+      }
+    } else {
+      alert("Attendance submission cancelled by user.");
+    }
+  }
+
+  const TakePicture = () => {
+
+    //Access the webcam and take a picture
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        video.onloadedmetadata = () => {
+
+          //Create a canvas and capture the snapshot
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const context = canvas.getContext('2d');
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          //Convert the canvas to a base64 image string and send to backend
+          const imageData = canvas.toDataURL('image/png');
+          console.log('Captured image data:', imageData);
+          TakeAttendance(imageData);
+
+          //Stop the webcam stream
+          stream.getTracks().forEach((track) => track.stop());
+        };
+      })
+      .catch((err) => {
+        console.error('Error accessing webcam:', err);
+      });
+  }
+
+  const getDashboardClass = async () => {
+      try{
+      //const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: currentWeek, dashboard: true, session: "Autumn " + year, time: isoString }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+      const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: 3, dashboard: true, session: "Autumn " + year, time: isoString }) }) //test to set Friday as current date
+      if (response.status === 601) {
+        //No classes are happening now
+        console.log("No classes happening now");
+        setClass({
+          "id": -1,
+          "subjectCode": "No currently running classes",
+        });
+        return;
+      }
+
+      if (!response.ok) {
+          throw new Error('Server connection error');
+      }
+      const data = await response.json();
+      setClass(data.class);
+      //console.log('Return data:', data.class);
+      }
+
+      catch (err) {
+      console.error('Class retreival failed:', err)
+      setClass()
+
+      }
+  }
+
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      await getDashboardClass();
+      await getUserClasses();
+      await getAllClasses();
+    };
+    fetchData();
+
+    //Set interval to fetch data every 15 minutes (1500000 ms) ||Use 1 minute (60000 ms) for testing
+    const interval = setInterval(fetchData, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
 
   //Calendar to be integrated with client systems (outlook, Google accounts, etc)
   const calendar = useMemo(() => buildCalendar(year, month, today), [year, month]);
@@ -90,6 +242,10 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
     setShowAddModal(false);
   };
 
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+  };
+
   const handleCloseRemoveModal = () => {
     setShowRemoveModal(false);
   };
@@ -114,8 +270,12 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
           </p>
         </section>
 
-        <div className="dashboard-row-header">
-          <h3 className="dashboard-panel-title">Key Attendance Metrics</h3>
+        <div className="dashboard-row-header">          
+          {currentClass.totalStudents ? (
+            <h3 className="dashboard-panel-title">Key Attendance Metrics [{currentClass.subjectCode} - {currentClass.subjectName}]</h3>
+          ) : ( 
+            <h3 className="dashboard-panel-title">Key Attendance Metrics [No classes currently running]</h3>
+          )}
           <div className="dashboard-classes-actions">
             <button
               type="button"
@@ -124,15 +284,25 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
             >
               + Add
             </button>
-            <button type="button" className="btn btn-secondary">
+            <button type="button" 
+            className="btn btn-secondary"
+            onClick={() => setShowEditModal(true)}
+            >
               Edit
             </button>
             <button
               type="button"
-              className="btn btn-danger"
+              className="btn btn-secondary"
               onClick={() => setShowRemoveModal(true)}
             >
-              Remove
+              My Classes
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => TakePicture()}
+            >
+              Capture Attendance
             </button>
           </div>
         </div>
@@ -140,23 +310,27 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
         <section className="classes-stats-row">
         <article className="classes-stat-card">
           <h3 className="classes-stat-label">Students Present</h3>
-          <p className="classes-stat-value">{present}</p>
-          <p className="classes-stat-meta">
-            {present} of {currentClass.totalStudents} ({presentPct}%)
-          </p>
+          <p className="classes-stat-value">{present || "N/A"}</p>
+          {currentClass.totalStudents ? (
+            <p className="classes-stat-meta">
+              {present} of {currentClass.totalStudents} ({presentPct}%)
+            </p>
+          ) : ( <p></p>)}
         </article>
 
         <article className="classes-stat-card">
           <h3 className="classes-stat-label">Students Absent</h3>
-          <p className="classes-stat-value">{absent}</p>
-          <p className="classes-stat-meta">
-            {absent} of {currentClass.totalStudents} ({absentPct}%)
-          </p>
+          <p className="classes-stat-value">{absent || "N/A"}</p>
+                   {currentClass.totalStudents ? (
+            <p className="classes-stat-meta">
+              {absent} of {currentClass.totalStudents} ({absentPct}%)
+            </p>
+          ) : ( <p></p>)}
         </article>
 
         <article className="classes-stat-card">
           <h3 className="classes-stat-label">Total Students</h3>
-          <p className="classes-stat-value">{currentClass.totalStudents}</p>
+          <p className="classes-stat-value">{currentClass.totalStudents || "N/A"}</p>
           <p className="classes-stat-meta">Across this class</p>
         </article>
       </section>
@@ -283,7 +457,7 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
                 <span />
               </div>
 
-              {classes.map((cls, index) => {
+              {allClasses.map((cls, index) => {
                 const disabled = cls.assigned;
                 return (
                   <div key={cls.id} className="add-class-row">
@@ -299,7 +473,7 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
                         disabled ? ' add-class-row-button-disabled' : ''
                       }`}
                       disabled={disabled}
-                      onClick={() => onAssignClass(cls.id)}
+                      onClick={() => onAssignClass(cls.id, cls.subjectName, cls.subjectCode) }
                     >
                       {disabled ? 'Added' : 'Add'}
                     </button>
@@ -331,11 +505,11 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
           >
             <header className="add-class-header">
               <div className="add-class-title-bar">
-                <h2 className="add-class-title">Remove Class</h2>
+                <h2 className="add-class-title">My Classes</h2>
               </div>
-              <p className="add-class-subtitle">
-                Select a class to remove from the dashboard
-              </p>
+              {/* <p className="add-class-subtitle">
+                Your currently assigned classes. Click "Remove" to remove classes.
+              </p> */}
             </header>
 
             <section className="add-class-table">
@@ -360,7 +534,7 @@ function DashboardPage2({ classes, onAssignClass, onRemoveClass }) {
                   <button
                     type="button"
                     className="remove-class-row-button"
-                    onClick={() => onRemoveClass(cls.id)}
+                    onClick={() => onRemoveClass(cls.id, cls.subjectName, cls.subjectCode) }
                   >
                     Remove
                   </button>

@@ -7,7 +7,7 @@ from app.models import Sample, Attendance, MyClasses, Class, Student
 from datetime import datetime
 from app.facemodels import FacialRecognitionModel
 from zoneinfo import ZoneInfo
-
+from mailersend import MailerSendClient, EmailBuilder
 
 load_dotenv()
 
@@ -28,16 +28,16 @@ def get_users():
 
 
 #Update attendance
-# @api_bp.route("/updateAttendance", methods=["POST"])
+@api_bp.route("/updateAttendance", methods=["POST"])
 def update_attendance_from_photo():
-    import base64
-    # data = request.get_json()
+    
+    data = request.get_json()
 
     # testing
-    with open("D:\\facial-recognition-fyp\\member-pics\\eric2.jpg", "rb") as f:
-        im_b64 = base64.b64encode(f.read())
+    # with open("D:\\facial-recognition-fyp\\member-pics\\eric2.jpg", "rb") as f:
+    #     im_b64 = base64.b64encode(f.read())
 
-    data = {"id": 2, "week": 2, "group_photo": im_b64}
+    # data = {"id": 2, "week": 2, "group_photo": im_b64}
 
     if not data or not data.get("group_photo") or not data.get("id") or not data.get("week"):
         return jsonify({"error": "Missing data"}), 400
@@ -49,6 +49,8 @@ def update_attendance_from_photo():
         Attendance.weekheld == data["week"],
         Attendance.presentstate == False
     ).all()
+
+
 
     print(str(db.session.query(Attendance).join(
         Student, Attendance.studentid == Student.studentid
@@ -63,16 +65,28 @@ def update_attendance_from_photo():
         return jsonify({"status":"All students are already marked present."}), 200
 
     query_emb = face_model.get_embeddings(data["group_photo"])
-    id_who_should_attend = [a.studentid for a in student_who_should_attend]
-    gallery_emb = [a.student.refembedding for a in student_who_should_attend]
 
-    ids_to_mark_attendance = face_model.find_match(id_who_should_attend, gallery_emb, query_emb, 0.5)
+    if (len(query_emb) > 0):
+        id_who_should_attend = [a.studentid for a in student_who_should_attend]
+        gallery_emb = [a.student.refembedding for a in student_who_should_attend]
 
-    for row in student_who_should_attend:
-        if row.studentid in ids_to_mark_attendance:
-            row.presentstate = True
+        ids_to_mark_attendance = face_model.find_match(id_who_should_attend, gallery_emb, query_emb, 0.5)
 
-    db.session.commit()
+        if len(ids_to_mark_attendance) == 0:
+                print("no matches")
+                return jsonify({"status":"No matching students detected in the photo."}), 200
+        
+        for row in student_who_should_attend:
+            if row.studentid in ids_to_mark_attendance:
+                row.presentstate = True
+            else:
+                send_email(row.student.studentemail, data.get("className"), data.get("classCode"), data.get("timeSlot"), row.student.studentname)
+
+        db.session.commit()
+    else:
+        for row in student_who_should_attend:
+            send_email(row.student.studentemail, data.get("className"), data.get("classCode"), data.get("timeSlot"), row.student.studentname)
+
     return jsonify({"status":"attendances updated"}), 200
 
 #Change attendance
@@ -162,13 +176,13 @@ def get_dashboard_class():
                 "presentStudents": class_record.present_count,
                 "day": class_record.classdayofweek
             }
-            print(response)
-            print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+            #print(response)
+            #print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
             
             return jsonify({"class": response})
         
     # Failure to find any classes
-    return jsonify({"error": "No classes happening now"}), 500
+    return jsonify({"error": "No classes happening now"}), 601
 
 
 #Get all assigned classes for a user for a given week
@@ -181,6 +195,32 @@ def get_classes():
 
     # Retrieve class information
     class_records = Class.query.filter(Class.classid.in_(class_ids)).all()
+
+    # Format and send response with each class details
+    response = []
+    for rec in class_records:
+        response.append({
+            "id": rec.classid,
+            "session": rec.academicsession,
+            "subjectCode": rec.subjectcode,
+            "subjectName": rec.subjectname,
+            "timeSlot": rec.classstarttime + " - " + rec.classendtime,
+            "classType": rec.classtype,
+            "day": rec.classdayofweek
+        })
+
+    # Sort by subject code for easier search
+    response.sort(key=lambda x: x["subjectCode"])
+
+    #print(response)
+    
+    return jsonify({"classes": response})
+
+#Get all classes
+@api_bp.route("/getAllClasses", methods=["POST"])
+def get_all_classes():
+    # Retrieve class information
+    class_records = Class.query.all()
 
     # Format and send response with each class details
     response = []
@@ -253,6 +293,42 @@ def get_students():
     response = list(students.values())
     return jsonify({"students" : response})
 
+@api_bp.route("/addClass", methods=["POST"])
+def add_class():    
+    data = request.get_json()
+
+    #Data verification
+    if not data.get("classId") and not data.get("userId"):  
+        return jsonify({"error": "Class ID not provided"}), 400
+    
+    #Assign class for user
+    existing_user = MyClasses.query.filter_by( educatorid = data["id"], classid = data["classId"]).first()
+    if existing_user:
+        return jsonify({"error": "User is already assigned to this class"}), 409
+
+    newClass = MyClasses(educatorid = data["id"], classid = data["classId"])
+    db.session.add(newClass)
+    db.session.commit()
+
+    # Implementation for adding a new class
+    return jsonify({"message": "Class added successfully"}), 200
+
+@api_bp.route("/removeClass", methods=["POST"])
+def remove_class():    
+    data = request.get_json()
+
+    #Data verification
+    if not data.get("classId") and not data.get("userId"):  
+        return jsonify({"error": "Class ID not provided"}), 400
+    
+    #Remove class for user if exists
+    existing_user = MyClasses.query.filter_by( educatorid = data["id"], classid = data["classId"]).first()
+    if existing_user:
+        db.session.delete(existing_user)
+        db.session.commit()
+        return jsonify({"message": "Class removed successfully"}), 200
+    else:
+        return jsonify({"error": "User is not assigned to this class"}), 404
 
 # Sample databse actions
 
@@ -338,3 +414,32 @@ def get_classes_by_educator_id(data):
         return jsonify({"error": "No classes found for given user"}), 404
     
     return [id[0] for id in class_ids]
+
+def send_email(toEmail, className, classCode, timeSlot, name):
+    
+    # Implementation for sending email using Mailtrap
+    api_key = os.environ.get("EMAIL_API_KEY")
+    ms = MailerSendClient(api_key = api_key)
+
+    email = (EmailBuilder()
+            .from_email("test@test-zxk54v80rwpljy6v.mlsender.net", "Automatic Student Attendance System")
+            .to_many([{"email": toEmail, "name": name}])
+            .subject("Non-Attendance Notification for " + classCode)
+            .html(f"""
+                <p>Dear {name},</p>
+                <p>You were marked absent for the class <strong>{className} ({classCode})</strong> held at <strong>{timeSlot}</strong>.</p>
+                <p>Please contact your instructor if you believe this is an error.</p>
+                <p>Best regards,<br>Automatic Student Attendance System</p>
+            """)
+            .text(f"""
+                Dear {name},
+
+                You were marked absent for the class {className} ({classCode}) held at {timeSlot}.
+                Please contact your instructor if you believe this is an error.
+
+                Best regards,
+                Automatic Student Attendance System
+            """)
+            .build())
+
+    ms.emails.send(email)

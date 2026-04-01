@@ -48,6 +48,10 @@ class FacialRecognitionModel:
         # Return None if no base64 image is passed
         if base64_string is None: print(f"No image passed."); return None
 
+        # Strip the header if it exists
+        if "," in base64_string:
+            base64_string = base64_string.split(",")[1]
+
         im_bytes = base64.b64decode(base64_string)
         im_arr = np.frombuffer(im_bytes, dtype=np.uint8)
         img = cv2.imdecode(im_arr, flags=cv2.IMREAD_COLOR)
@@ -56,7 +60,7 @@ class FacialRecognitionModel:
         # Return None if no face is detected
         if len(bboxes) < 1: 
             print("No face detected.")
-            return None
+            return []
         
 
         # Handle more than one face in the image
@@ -107,5 +111,6 @@ class FacialRecognitionModel:
         
         comparison_res = [idx for score, idx in zip(scores, indexes) if score[idx] >= threshold]
         detected_students = [ids[idx] for idx in comparison_res]
+        print(f"Detected students: {detected_students}")
 
         return detected_students
