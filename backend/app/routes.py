@@ -50,15 +50,13 @@ def update_attendance_from_photo():
         Attendance.presentstate == False
     ).all()
 
-
-
-    print(str(db.session.query(Attendance).join(
-        Student, Attendance.studentid == Student.studentid
-    ).filter(
-        Attendance.classid == data["id"],
-        Attendance.weekheld == data["week"],
-        Attendance.presentstate == False
-    )))
+    # print(str(db.session.query(Attendance).join(
+    #     Student, Attendance.studentid == Student.studentid
+    # ).filter(
+    #     Attendance.classid == data["id"],
+    #     Attendance.weekheld == data["week"],
+    #     Attendance.presentstate == False
+    # )))
 
     if not student_who_should_attend:
         print("nope")
@@ -66,12 +64,14 @@ def update_attendance_from_photo():
 
     query_emb = face_model.get_embeddings(data["group_photo"])
 
+    # Only proceed if there are people in the captured photo
     if (len(query_emb) > 0):
         id_who_should_attend = [a.studentid for a in student_who_should_attend]
         gallery_emb = [a.student.refembedding for a in student_who_should_attend]
 
         ids_to_mark_attendance = face_model.find_match(id_who_should_attend, gallery_emb, query_emb, 0.5)
 
+        # There are people in the captured photo, but none of them are students of this class
         if len(ids_to_mark_attendance) == 0:
                 print("no matches")
                 return jsonify({"status":"No matching students detected in the photo."}), 200
@@ -416,6 +416,7 @@ def get_classes_by_educator_id(data):
     return [id[0] for id in class_ids]
 
 def send_email(toEmail, className, classCode, timeSlot, name):
+    return
     
     # Implementation for sending email using Mailtrap
     api_key = os.environ.get("EMAIL_API_KEY")
