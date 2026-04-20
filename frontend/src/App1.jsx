@@ -5,6 +5,8 @@ import MyClassesPage from './MyClassesPage';
 import StudentsPage from './StudentsPage';
 import TestPage from './test';
 import DashboardPage2 from './dashboard2';
+import AnalyticsPage from './AnalyticsPage';
+import ProfilePage from './ProfilePage';
 
 const INITIAL_CLASSES = [
   {
@@ -54,7 +56,7 @@ const INITIAL_CLASSES = [
 ];
 
 function App() {
-  const [page, setPage] = useState('dashboard'); // 'dashboard' | 'classes' | 'support' | 'students' | 'test' | 'dashboard2'
+  const [page, setPage] = useState('dashboard'); // 'dashboard' | 'classes' | 'support' | 'students' | 'test' | 'dashboard2' | 'Analytics'
   const [classes, setClasses] = useState(INITIAL_CLASSES);
 
   const handleNavClick = (target) => (e) => {
@@ -141,12 +143,24 @@ function App() {
               <span className="nav-label">Students</span>
             </a>
 
-            <a className="nav-item nav-item-analytics" href="#">
-              <img src="/assets/analytics.png" alt="" className="nav-thumbnail" />
+            <a
+              href="#analytics"
+              className={`nav-item nav-item-analytics${
+                page === 'analytics' ? ' is-active' : ''
+              }`}
+              onClick={handleNavClick('analytics')}
+            >
+              <img src="/assets/analytics.png" alt="Analytics" className="nav-thumbnail" />
               <span className="nav-label">Analytics</span>
             </a>
 
-            <a className="nav-item nav-item-profile" href="#">
+            <a
+              href="#profile"
+              className={`nav-item nav-item-profile${
+                page === 'profile' ? ' is-active' : ''
+              }`}
+              onClick={handleNavClick('profile')}
+            >
               <img src="/assets/icon-profile.svg" alt="" className="nav-icon" />
               <span className="nav-label">Profile</span>
             </a>
@@ -197,6 +211,8 @@ function App() {
           <MyClassesPage classes={classes.filter((cls) => cls.assigned)} />
         )}
         {page === 'students' && <StudentsPage />}
+        {page === 'profile' && <ProfilePage />}
+        {page === 'analytics' && <AnalyticsPage />}
         {page === 'dashboard2' && <DashboardPage2 
           classes={classes}
           onAssignClass={handleAssignClass}

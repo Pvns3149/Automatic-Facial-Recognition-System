@@ -68,6 +68,7 @@ function StudentsPage() {
       }
     };
 
+    
   //Retreive all classes assigned to the user 
   const getClasses = async () => {
     try{

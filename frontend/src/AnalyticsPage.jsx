@@ -1,8 +1,9 @@
-import { useMemo, useRef, useState } from 'react';
-import { getAvailableWeeks, getMaxAvailableWeek } from './services/api';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {ChangeClass, getAvailableWeeks, getMaxAvailableWeek, capitalizeFirstLetter } from './ClassUtils'
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // Converts polar coordinates (angle + radius) to x/y point on SVG canvas.
 function polarToCartesian(cx, cy, r, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
@@ -47,11 +48,12 @@ function AnalyticsPage() {
   //Student data holder
   const [classes, setClasses] = useState([])
 
+  //Current class holder
+  const [selectedId, setSelectedId] = useState('');
+
   // Filter selections that drive the chart and table content.
   const [filters, setFilters] = useState({
-    session: '',
     classId: '',
-    timeSlot: '',
     week: '3',
   });
 
@@ -59,14 +61,13 @@ function AnalyticsPage() {
   const getStudentAnalytics = async () => {
   
     try{
-      console.log(current.id)
-      const response = await fetch(`${API_BASE_URL}/getStudentAnalytics`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', classId : 1, week: filters.week }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+      const response = await fetch(`${API_BASE_URL}/getStudents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ classId : selectedId, week: 0 }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
       if (!response.ok) {
         throw new Error('Server connection error');
       }
       const data = await response.json();
       setStudents(data.students);
-      console.log('Return data:', data.students);
+      console.log('Return student data:', data.students);
 
     }
 
@@ -83,7 +84,12 @@ function AnalyticsPage() {
       }
       const data = await response.json();
       setClasses(data.classes);
-      console.log('Return data:', data.classes);
+      console.log('Return class data:', data.classes);
+
+      //Set default selected ID 
+      if (data.classes.length > 0) {
+        setSelectedId(data.classes[0].id);
+      }
 
     }
 
@@ -92,6 +98,20 @@ function AnalyticsPage() {
     }
   }
 
+  //Update classid selected
+  useEffect(() => {
+    ChangeClass(selectedId, classes);
+  }, [selectedId, classes]);
+
+  //Initial class list fetch
+  useEffect(() => {
+    getClasses();
+  }, []);
+
+  // Initial data fetch and whenever filters change. 
+  useEffect(() => {
+    if (selectedId) {getStudentAnalytics();}
+  }, [filters, selectedId]);
 
   // Collect all weeks that exist in student attendance data.
   const allAvailableWeeks = useMemo(() => getAvailableWeeks(students), [students]);
@@ -104,31 +124,31 @@ function AnalyticsPage() {
     ? fallbackWeek
     : Number(filters.week) || fallbackWeek;
 
-  // Dropdown options for Session filter.
-  const sessionOptions = useMemo(
-    () => Array.from(new Set(classes.map((cls) => cls.session))),
-    [classes],
-  );
+  // // Dropdown options for Session filter.
+  // const sessionOptions = useMemo(
+  //   () => Array.from(new Set(classes.map((cls) => cls.session))),
+  //   [classes],
+  // );
 
   // Class dropdown depends on selected session.
-  const classOptions = useMemo(
-    () =>
-      classes.filter((cls) => !filters.session || cls.session === filters.session),
-    [classes, filters.session],
-  );
+  // const classOptions = useMemo(
+  //   () =>
+  //     classes.filter((cls) => !filters.session || cls.session === filters.session),
+  //   [],
+  // );
 
-  // Time dropdown depends on selected session/class.
-  const timeSlotOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          classOptions
-            .filter((cls) => !filters.classId || cls.id === filters.classId)
-            .map((cls) => cls.timeSlot),
-        ),
-      ),
-    [classOptions, filters.classId],
-  );
+  // // Time dropdown depends on selected session/class.
+  // const timeSlotOptions = useMemo(
+  //   () =>
+  //     Array.from(
+  //       new Set(
+  //         classOptions
+  //           .filter((cls) => !filters.classId || cls.id === filters.classId)
+  //           .map((cls) => cls.timeSlot),
+  //       ),
+  //     ),
+  //   [classOptions, filters.classId],
+  //);
 
   // Build quick lookup map so we can show class details for each student row.
   const classById = useMemo(
@@ -137,24 +157,24 @@ function AnalyticsPage() {
   );
 
   // Apply all current filters to the student list.
-  const filteredStudents = useMemo(
-    () =>
-      students.filter((student) => {
-        const cls = classById[student.classId];
-        if (!cls) return false;
-        if (filters.session && cls.session !== filters.session) return false;
-        if (filters.classId && student.classId !== filters.classId) return false;
-        if (filters.timeSlot && cls.timeSlot !== filters.timeSlot) return false;
-        return true;
-      }),
-    [students, classById, filters],
-  );
+  // const filteredStudents = useMemo(
+  //   () =>
+  //     students.filter((student) => {
+  //       const cls = classById[student.classId];
+  //       if (!cls) return false;
+  //       if (filters.session && cls.session !== filters.session) return false;
+  //       if (filters.classId && student.classId !== filters.classId) return false;
+  //       if (filters.timeSlot && cls.timeSlot !== filters.timeSlot) return false;
+  //       return true;
+  //     }),
+  //   [students, classById, filters],
+  // );
 
   // Present/Absent counts used by the weekly pie chart.
   const chartStats = useMemo(() => {
     let present = 0;
     let absent = 0;
-    filteredStudents.forEach((student) => {
+    students.forEach((student) => {
       const status = student.weeks?.[week] || 'present';
       if (status === 'absent') {
         absent += 1;
@@ -166,12 +186,12 @@ function AnalyticsPage() {
     const presentPct = total ? Math.round((present / total) * 100) : 0;
     const absentPct = total ? 100 - presentPct : 0;
     return { present, absent, total, presentPct, absentPct };
-  }, [filteredStudents, week]);
+  }, [students, week]);
 
   // Table rows with calculated attendance percentage per student.
   const studentRows = useMemo(
     () =>
-      filteredStudents.map((student) => {
+      students.map((student) => {
         const missed = Object.values(student.weeks || {}).filter(
           (status) => status === 'absent',
         ).length;
@@ -181,7 +201,7 @@ function AnalyticsPage() {
         const percentage = Math.round((attended / trackedWeeks) * 100);
         return { ...student, percentage };
       }),
-    [filteredStudents],
+    [students],
   );
 
   // For line chart: weekly present/absent totals across all available weeks.
@@ -189,7 +209,7 @@ function AnalyticsPage() {
     return allAvailableWeeks.map((weekNumber) => {
       let present = 0;
       let absent = 0;
-      filteredStudents.forEach((student) => {
+      students.forEach((student) => {
         const status = student.weeks?.[weekNumber] || 'present';
         if (status === 'absent') {
           absent += 1;
@@ -199,7 +219,7 @@ function AnalyticsPage() {
       });
       return { week: weekNumber, present, absent };
     });
-  }, [filteredStudents, allAvailableWeeks]);
+  }, [students, allAvailableWeeks]);
 
   // Precomputes chart dimensions, points, smooth paths, and y-axis ticks.
   const lineChartGeometry = useMemo(() => {
@@ -286,29 +306,43 @@ function AnalyticsPage() {
       const imageData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 
-      // Fit captured image to PDF width and paginate if content is tall.
+      // Add title with class data to the PDF
+      let title = `Attendance Report: ${classById[selectedId].subjectCode} - ${classById[selectedId].subjectName} - ${classById[selectedId].session} - ${capitalizeFirstLetter(classById[selectedId].day)} – ${classById[selectedId].timeSlot}\nGenerated on ${new Date().toLocaleDateString()}`;
+
+      // Dynamically adjust font size to fit the title within the page width
       const pageWidth = pdf.internal.pageSize.getWidth();
+      let fontSize = 16;
+      const margin = 10;
+
+      pdf.setFontSize(fontSize);
+      while (pdf.getTextWidth(title) > pageWidth - margin * 2 && fontSize > 10) {
+        fontSize -= 1;
+        pdf.setFontSize(fontSize);
+      }
+
+      pdf.text(title, margin, 10); // Place the title at x=10, y=10
+
+      // Fit captured image to fixed page width
+      const fixedWidth = pageWidth - margin * 2;
+      const fixedHeight = (canvas.height * fixedWidth) / canvas.width;
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 8;
-      const renderWidth = pageWidth - margin * 2;
-      const renderHeight = (canvas.height * renderWidth) / canvas.width;
-      const printableHeight = pageHeight - margin * 2;
+      const printableHeight = pageHeight - margin * 2 - 20; // Adjust for title height
 
-      let heightLeft = renderHeight;
-      let yPosition = margin;
+      let heightLeft = fixedHeight;
+      let yPosition = margin + 20; // Adjust for title height
 
-      pdf.addImage(imageData, 'PNG', margin, yPosition, renderWidth, renderHeight);
+      pdf.addImage(imageData, 'PNG', margin, yPosition, fixedWidth, fixedHeight);
       heightLeft -= printableHeight;
 
       while (heightLeft > 0) {
         pdf.addPage();
-        yPosition = margin - (renderHeight - heightLeft);
-        pdf.addImage(imageData, 'PNG', margin, yPosition, renderWidth, renderHeight);
+        yPosition = margin - (fixedHeight - heightLeft) + 20; // Adjust for title height
+        pdf.addImage(imageData, 'PNG', margin, yPosition, fixedWidth, fixedHeight);
         heightLeft -= printableHeight;
       }
 
       const selectedWeekLabel = isAllWeeks ? 'all-weeks' : `week-${week}`;
-      const fileName = `attendance-report-${selectedWeekLabel}.pdf`;
+      const fileName = `attendance-report-${classById[selectedId].subjectCode}–${classById[selectedId].session}–${capitalizeFirstLetter(classById[selectedId].day)}–${classById[selectedId].timeSlot}-${selectedWeekLabel}.pdf`;
       pdf.save(fileName);
     } catch (error) {
       // Keep visible for debugging if report generation fails.
@@ -317,6 +351,20 @@ function AnalyticsPage() {
       setIsGeneratingReport(false);
     }
   };
+
+  //Default display if no classes assigned to user
+  if (!classes.length ) {
+    return (
+      <main className="classes-main">
+        <section className="classes-header">
+          <h2 className="classes-title">Analytics</h2>
+          <p className="classes-subtitle">
+            No classes have been added from the dashboard yet.
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="analytics-main">
@@ -328,7 +376,7 @@ function AnalyticsPage() {
       </section>
 
       <section className="analytics-filters">
-        {/* Session filter */}
+        {/* Session filter
         <div className="analytics-filter-field">
           <label htmlFor="analytics-session">Session</label>
           <select
@@ -343,27 +391,30 @@ function AnalyticsPage() {
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         {/* Class filter */}
         <div className="analytics-filter-field">
           <label htmlFor="analytics-class">Class</label>
           <select
-            id="analytics-class"
-            value={filters.classId}
-            onChange={handleFilterChange('classId')}
+            id="class-select"
+            className="classes-select"
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
           >
-            <option value="">All classes</option>
-            {classOptions.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.subjectCode} - {cls.subjectName}
-              </option>
-            ))}
+            {classes.map((cls) => {
+              const name = `${cls.session} – ${cls.subjectCode} – ${cls.subjectName} – ${capitalizeFirstLetter(cls.day)} – ${cls.timeSlot}`;
+              return (
+                <option key={cls.id} value={cls.id}>
+                  {name}
+                </option>
+              );
+            })}
           </select>
         </div>
 
         {/* Time filter */}
-        <div className="analytics-filter-field">
+        {/* <div className="analytics-filter-field">
           <label htmlFor="analytics-time">Time</label>
           <select
             id="analytics-time"
@@ -377,7 +428,7 @@ function AnalyticsPage() {
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         {/* Week / All Weeks filter */}
         <div className="analytics-filter-field">
@@ -565,18 +616,15 @@ function AnalyticsPage() {
             <span>Student ID</span>
             <span>Name</span>
             <span>Email</span>
-            <span>Class</span>
             <span>Attendance %</span>
           </div>
           {studentRows.map((student, index) => {
-            const cls = classById[student.classId];
             return (
               <div key={student.id} className="analytics-table-row">
                 <span>{index + 1}</span>
                 <span>{student.id}</span>
                 <span>{student.name}</span>
                 <span>{student.email}</span>
-                <span>{cls ? cls.subjectCode : '-'}</span>
                 <span className="analytics-percentage-cell">
                   <span className="analytics-progress-track">
                     <span

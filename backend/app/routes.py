@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
 from collections import defaultdict
 from app import db
-from app.models import Sample, Attendance, MyClasses, Class, Student
+from app.models import Educator, Sample, Attendance, MyClasses, Class, Student
 from datetime import datetime
 from app.facemodels import FacialRecognitionModel
 from zoneinfo import ZoneInfo
@@ -258,7 +258,7 @@ def get_students():
     queried_class_id = (Attendance.classid == data["classId"])
     queried_week_held = (Attendance.weekheld == int(data["week"])) if (data.get("week") != None and int(data.get("week")) != 0) else True # None or 0 means all weeks
     queried_stud_id = (Attendance.studentid == data["id"]) if data.get("id") != None else True
-    queried_stud_name = Student.studentname.ilike(f"%{data['name'].strip()}%") if (data.get("name") != None and data.get("name").strip()) != "" else True # Empty string means no searching by name
+    queried_stud_name = Student.studentname.ilike(f"%{data['name'].strip()}%") if (data.get("name") != None and data.get("name").strip() != "") else True # Empty string means no searching by name
 
     print(queried_stud_name)
 
@@ -329,6 +329,23 @@ def remove_class():
         return jsonify({"message": "Class removed successfully"}), 200
     else:
         return jsonify({"error": "User is not assigned to this class"}), 404
+    
+
+@api_bp.route("/getEducator", methods=["POST"])
+def get_educator():
+    data = request.get_json()
+
+    if not data.get("id"):
+        return jsonify({"error": "Educator ID not provided"}), 400
+
+    educator = Educator.query.filter_by(educatorid=data["id"]).first()
+    if not educator:
+        return jsonify({"error": "Educator not found"}), 404
+
+    response = educator.to_dict()
+    
+    return jsonify({"educator": response}), 200
+
 
 # Sample databse actions
 

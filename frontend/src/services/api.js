@@ -87,3 +87,24 @@ export const api = {
 };
 
 export default api;
+
+//Find the number of unique weels available
+export function getAvailableWeeks(students) {
+  const weekSet = new Set();
+  students.forEach((student) => {
+    Object.keys(student.weeks || {}).forEach((weekKey) => {
+      const parsedWeek = Number(weekKey);
+      if (!Number.isNaN(parsedWeek) && parsedWeek > 0) {
+        weekSet.add(parsedWeek);
+      }
+    });
+  });
+  return [...weekSet].sort((a, b) => a - b);
+}
+
+
+// Highest available week in the provided data.
+export function getMaxAvailableWeek(students) {
+  const weeks = getAvailableWeeks(students);
+  return weeks.length ? weeks[weeks.length - 1] : 1;
+}

@@ -68,17 +68,24 @@ class Educator(db.Model):
     educatorname = db.Column(TEXT)
     educatoremail = db.Column(TEXT)
     educatorpass = db.Column(TEXT)
+    educatorphone = db.Column(TEXT)
+    educatorfaculty = db.Column(TEXT)
+    educatorlocation = db.Column(TEXT)
+    
 
     # Link to My_Classes table, referring to the educator's currently selected classes on the system
     educator_my_classes = db.relationship("MyClasses", back_populates="educator")
 
     def to_dict(self):
-        """Convert Educator object to dictionary."""
+        "Convert Educator object to dictionary."
         return {
-            "id": self.educatorid,
             "name": self.educatorname,
-            "email": self.educatoremail
+            "email": self.educatoremail,
+            "phone": self.educatorphone,
+            "faculty": self.educatorfaculty,
+            "location": self.educatorlocation
         }
+    
 
     def __repr__(self):
         return f"<Educator {self.educatorid}>"
