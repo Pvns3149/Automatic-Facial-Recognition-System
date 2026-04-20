@@ -46,7 +46,7 @@ class FacialRecognitionModel:
     """
     def get_embeddings(self, base64_string: str):
         # Return None if no base64 image is passed
-        if base64_string is None: print(f"No image passed."); return None
+        if base64_string is None: print(f"No image passed."); return []
 
         # Strip the header if it exists
         if "," in base64_string:
