@@ -79,10 +79,12 @@ def update_attendance_from_photo():
         for row in student_who_should_attend:
             if row.studentid in ids_to_mark_attendance:
                 row.presentstate = True
+            #TODO: Remove send_email and let the scheduler handle this instead
             else:
                 send_email(row.student.studentemail, data.get("className"), data.get("classCode"), data.get("timeSlot"), row.student.studentname)
 
         db.session.commit()
+    #TODO: Remove send_email and let the scheduler handle this instead
     else:
         for row in student_who_should_attend:
             send_email(row.student.studentemail, data.get("className"), data.get("classCode"), data.get("timeSlot"), row.student.studentname)
