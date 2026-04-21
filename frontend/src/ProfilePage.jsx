@@ -1,16 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
-const id = 'LEC001'; // Placeholder ID for fetching educator data. Replace with dynamic value as needed.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-
-function ProfilePage() {
+function ProfilePage({ API_BASE_URL }) {
 
 const [educator, setEducator] = useState("");
 
     useEffect(() => {
         const getEducator = async () => {
             try{
-            const response = await fetch(`${API_BASE_URL}/getEducator`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : id }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+            const response = await fetch(`${API_BASE_URL}/getEducator`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include' }); //CHANGE ID AND WEEK TO DYNAMIC VAR
             if (!response.ok) {
                 throw new Error('Server connection error');
             }
@@ -58,7 +55,7 @@ const [educator, setEducator] = useState("");
             </article>
             <article className="profile-detail-item">
               <span className="profile-detail-label">Staff ID</span>
-              <span className="profile-detail-value">{id}</span>
+              <span className="profile-detail-value">{educator.id}</span>
             </article>
             <article className="profile-detail-item">
               <span className="profile-detail-label">Faculty</span>

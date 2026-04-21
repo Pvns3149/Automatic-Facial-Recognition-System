@@ -1,9 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
 import {ChangeClass, capitalizeFirstLetter} from './ClassUtils';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 // CLASS ID HANDLING NOT COMPLETERD, CURRENTLY HARDCODED TO CLASS 3
-function StudentsPage() {
+function StudentsPage({ API_BASE_URL }) {
   const [students, setStudents] = useState([]);
   const [filters, setFilters] = useState({
     studentId: '',
@@ -72,7 +71,7 @@ function StudentsPage() {
   //Retreive all classes assigned to the user 
   const getClasses = async () => {
     try{
-      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: 1 }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: 1 }) }); //CHANGE WEEK TO DYNAMIC VAR
       if (!response.ok) {
         throw new Error('Server connection error');
       }

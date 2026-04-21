@@ -1,18 +1,61 @@
 import os
+import jwt
 from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
 from collections import defaultdict
 from app import db
 from app.models import Educator, Sample, Attendance, MyClasses, Class, Student
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.facemodels import FacialRecognitionModel
 from zoneinfo import ZoneInfo
 from mailersend import MailerSendClient, EmailBuilder
+from functools import wraps
 
 load_dotenv()
 
 api_bp = Blueprint("api", __name__)
 face_model = FacialRecognitionModel(os.environ.get("INSIGHTFACE_ROOT"))
+AUTH_KEY = os.environ.get("AUTH_KEY")
+
+#Generate auth token for persistent user and embed id
+def generate_auth_token(user_id):
+    payload = {
+        "user_id": user_id,
+        "exp": datetime.now(ZoneInfo("Australia/Sydney")) + timedelta(hours = 2.5)
+    }
+    token = jwt.encode(payload, AUTH_KEY, algorithm="HS256")
+    return token
+
+#validate token on request
+def validate_token(token):
+    try:
+        payload = jwt.decode(token, AUTH_KEY, algorithms=["HS256"])
+        return payload["user_id"]
+    except jwt.ExpiredSignatureError:
+        return "Token expired"
+    except jwt.InvalidTokenError:
+        return "Invalid token"
+
+
+#create wrapper for token authentication
+def token_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        token = request.cookies.get('auth_token')
+        if not token:
+            return jsonify({"error": "No token provided"}), 401
+        
+        user_id = validate_token(token)
+        if user_id == "Token expired":
+            return jsonify({"error": "Token has expired."}), 401
+        elif user_id == "Invalid token":
+            return jsonify({"error": "Invalid token."}), 401
+        
+        #Extract id
+        request.user_id = user_id  
+        return f(*args, **kwargs)
+    return wrapper
+
 
 #Connection test
 @api_bp.route("/health", methods=["GET"])
@@ -116,11 +159,12 @@ def change_attendance():
 
 #Get the class happening right now
 @api_bp.route("/getDashboardClass", methods=["POST"])
+@token_required
 def get_dashboard_class():
 
     #Data receival
     data = request.get_json()
-    class_ids = get_classes_by_educator_id(data)
+    class_ids = get_classes_by_educator_id(data, request.user_id)
 
     # Frontend always return UTC+0 at the time of interacting with the dashboard
     current_time = datetime.fromisoformat(data["time"].replace("Z", "+00:00"))
@@ -189,11 +233,12 @@ def get_dashboard_class():
 
 #Get all assigned classes for a user for a given week
 @api_bp.route("/getClasses", methods=["POST"])
+@token_required
 def get_classes():
 
     #Data receival
     data = request.get_json()
-    class_ids = get_classes_by_educator_id(data)
+    class_ids = get_classes_by_educator_id(data, request.user_id)
 
     # Retrieve class information
     class_records = Class.query.filter(Class.classid.in_(class_ids)).all()
@@ -240,7 +285,6 @@ def get_all_classes():
     # Sort by subject code for easier search
     response.sort(key=lambda x: x["subjectCode"])
 
-    print(response)
     
     return jsonify({"classes": response})
 
@@ -296,19 +340,20 @@ def get_students():
     return jsonify({"students" : response})
 
 @api_bp.route("/addClass", methods=["POST"])
+@token_required
 def add_class():    
     data = request.get_json()
 
     #Data verification
-    if not data.get("classId") and not data.get("userId"):  
+    if not data.get("classId"):  
         return jsonify({"error": "Class ID not provided"}), 400
     
     #Assign class for user
-    existing_user = MyClasses.query.filter_by( educatorid = data["id"], classid = data["classId"]).first()
+    existing_user = MyClasses.query.filter_by( educatorid = request.user_id, classid = data["classId"]).first()
     if existing_user:
         return jsonify({"error": "User is already assigned to this class"}), 409
 
-    newClass = MyClasses(educatorid = data["id"], classid = data["classId"])
+    newClass = MyClasses(educatorid = request.user_id, classid = data["classId"])
     db.session.add(newClass)
     db.session.commit()
 
@@ -316,15 +361,16 @@ def add_class():
     return jsonify({"message": "Class added successfully"}), 200
 
 @api_bp.route("/removeClass", methods=["POST"])
+@token_required
 def remove_class():    
     data = request.get_json()
 
     #Data verification
-    if not data.get("classId") and not data.get("userId"):  
+    if not data.get("classId"):  
         return jsonify({"error": "Class ID not provided"}), 400
     
     #Remove class for user if exists
-    existing_user = MyClasses.query.filter_by( educatorid = data["id"], classid = data["classId"]).first()
+    existing_user = MyClasses.query.filter_by( educatorid = request.user_id, classid = data["classId"]).first()
     if existing_user:
         db.session.delete(existing_user)
         db.session.commit()
@@ -334,13 +380,10 @@ def remove_class():
     
 
 @api_bp.route("/getEducator", methods=["POST"])
+@token_required
 def get_educator():
-    data = request.get_json()
 
-    if not data.get("id"):
-        return jsonify({"error": "Educator ID not provided"}), 400
-
-    educator = Educator.query.filter_by(educatorid=data["id"]).first()
+    educator = Educator.query.filter_by(educatorid=request.user_id).first()
     if not educator:
         return jsonify({"error": "Educator not found"}), 404
 
@@ -348,7 +391,58 @@ def get_educator():
     
     return jsonify({"educator": response}), 200
 
+@api_bp.route('/login', methods=['POST'])
+def login():
+    email = request.json.get('email')
+    passwd = request.json.get('passwd')
 
+    #Compare against database
+    login=Educator.query.filter_by(educatoremail=email).first()
+
+    if login and login.verify_password(passwd):
+
+        #Generate token
+        token = generate_auth_token(login.educatorid)
+
+        response = jsonify({"message": "Login successful"})
+        response.set_cookie("auth_token", token, httponly=True, samesite="lax", secure=False, path="/") #change secure if HTTPS is used
+        return response
+    else:
+        #show the login page with an error message
+        return jsonify({"success": False, "message": "Invalid credentials"}), 401
+    
+
+
+@api_bp.route('/register', methods=['POST'])
+def register(): 
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    # Check if email already exists
+    existing_user = Educator.query.filter_by(educatoremail=data["email"]).first()
+    if existing_user:
+        return jsonify({"error": "Email already exists"}), 409
+
+    # Check if ID already exists
+    existing_id = Educator.query.filter_by(educatorid=data["id"]).first()
+    if existing_id:
+        return jsonify({"error": "ID already exists"}), 409
+
+    new_educator = Educator(
+        educatorid=data["id"],
+        educatorname=data["name"],
+        educatoremail=data["email"],
+        educatorphone=data.get("phone", ""),
+        educatorfaculty=data.get("faculty", ""),
+        educatorlocation=data.get("officeBuilding", "")
+    )
+    new_educator.password = data["password"] 
+    db.session.add(new_educator)
+    db.session.commit()
+
+    return jsonify({"message": "Registration successful"}), 200
 # Sample databse actions
 
 # @api_bp.route("/users/<int:user_id>", methods=["GET"])
@@ -422,13 +516,13 @@ def studentCount(class_id, week, present : None ):
         count = Attendance.query.filter_by(classid = class_id, weekheld = week).count()
     return count
 
-def get_classes_by_educator_id(data):
+def get_classes_by_educator_id(data, id):
     #Data verification
-    if not data or not data.get("id") or not data.get("week"): #WEEK DATA SHOULD BE IN COOKIE ON LOGIN
+    if not data or not id or not data.get("week"): #WEEK DATA SHOULD BE IN COOKIE ON LOGIN
         return jsonify({"error": "ID or week not provided"}), 400
     
     # Check if user exists and get id of all classes the user has access to
-    class_ids = MyClasses.query.with_entities(MyClasses.classid).filter_by(educatorid = data["id"]).all()
+    class_ids = MyClasses.query.with_entities(MyClasses.classid).filter_by(educatorid = id).all()
     if not class_ids:
         return jsonify({"error": "No classes found for given user"}), 404
     

@@ -1,3 +1,4 @@
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import DashboardPage from './DashboardPage';
 import SupportPage from './SupportPage';
@@ -7,221 +8,115 @@ import TestPage from './test';
 import DashboardPage2 from './dashboard2';
 import AnalyticsPage from './AnalyticsPage';
 import ProfilePage from './ProfilePage';
-
-const INITIAL_CLASSES = [
-  {
-    id: 'isit312',
-    session: 'Spring 2025',
-    subjectCode: 'ISIT312',
-    subjectName: 'Big Data Management',
-    timeSlot: 'MON 10.30 AM - 12.30 PM',
-    classType: 'Laboratory',
-    totalStudents: 35,
-    presentPercent: 0.96,
-    assigned: true,
-  },
-  {
-    id: 'csci218',
-    session: 'Spring 2025',
-    subjectCode: 'CSCI218',
-    subjectName: 'Foundations of Artificial Intelligence',
-    timeSlot: 'THU 8.30 AM - 10.30 AM',
-    classType: 'Lecture',
-    totalStudents: 35,
-    presentPercent: 0.92,
-    assigned: true,
-  },
-  {
-    id: 'csit214',
-    session: 'Spring 2025',
-    subjectCode: 'CSIT214',
-    subjectName: 'IT Project Management',
-    timeSlot: 'WED 10.30 AM - 12.30 PM',
-    classType: 'Lecture',
-    totalStudents: 35,
-    presentPercent: 0.89,
-    assigned: true,
-  },
-  {
-    id: 'csit213',
-    session: 'Spring 2025',
-    subjectCode: 'CSIT213',
-    subjectName: 'Java Programming',
-    timeSlot: 'TUE 8.30 AM - 10.30 AM',
-    classType: 'Lecture',
-    totalStudents: 35,
-    presentPercent: 0.9,
-    assigned: false,
-  },
-];
+import LoginPage from './LoginPage';
+import Logout from './logout';
+import RegisterPage from './RegisterPage';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function App() {
-  const [page, setPage] = useState('dashboard'); // 'dashboard' | 'classes' | 'support' | 'students' | 'test' | 'dashboard2' | 'Analytics'
-  const [classes, setClasses] = useState(INITIAL_CLASSES);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication state
 
-  const handleNavClick = (target) => (e) => {
-    e.preventDefault();
-    setPage(target);
-  };
+  // const handleLogout = async () => {
+  //   await fetch(`${API_BASE_URL}/logout`, { method: 'POST', credentials: 'include' });
+  //   setIsAuthenticated(false);
+  //   window.location.href = '/login';
+  // };
 
-  const handleAssignClass = (id) => {
-    setClasses((prev) =>
-      prev.map((cls) => (cls.id === id ? { ...cls, assigned: true } : cls)),
-    );
-  };
-
-  const handleRemoveClass = (id) => {
-    setClasses((prev) =>
-      prev.map((cls) => (cls.id === id ? { ...cls, assigned: false } : cls)),
-    );
+  const ProtectedRoute = ({ children }) => {
+    return isAuthenticated ? children : <Navigate to="/login" />;
   };
 
   return (
-    <div className="app-shell">
-      <header className="top-bar">
-        <div className="top-bar-bg">
-          <h1 className="app-title">Automatic Student Attendance</h1>
-          <div className="profile-picture-wrapper">
-            <img
-              src="/assets/profile-picture.png"
-              alt="Profile"
-              className="profile-picture"
-            />
-          </div>
-        </div>
-      </header>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} API_BASE_URL={API_BASE_URL} />} />
+        <Route path="/register" element={<RegisterPage API_BASE_URL={API_BASE_URL} />} />
+        
+        <Route
+          path="/*"
+          element={
+            <div className="app-shell">
+              <header className="top-bar">
+                <div className="top-bar-bg">
+                  <h1 className="app-title">Automatic Student Attendance</h1>
+                  <div className="profile-picture-wrapper">
+                    <img
+                      src="/assets/profile-picture.png"
+                      alt="Profile"
+                      className="profile-picture"
+                    />
+                  </div>
+                </div>
+              </header>
 
-      <div className="app-body">
-        <aside className="nav-bar">
-          <nav className="nav-items">
-            <a
-              href="#dashboard"
-              className={`nav-item nav-item-dashboard${
-                page === 'dashboard' ? ' is-active' : ''
-              }`}
-              onClick={handleNavClick('dashboard')}
-            >
-              <img src="/assets/icon-dashboard.svg" alt="" className="nav-icon" />
-              <span className="nav-label">Dashboard</span>
-            </a>
+              <div className="app-body">
+                <aside className="nav-bar">
+                  <nav className="nav-items">
+                    <Link to="/dashboard" className="nav-item nav-item-dashboard">
+                      <img src="/assets/icon-dashboard.svg" alt="" className="nav-icon" />
+                      <span className="nav-label">Dashboard</span>
+                    </Link>
 
-            <a
-              href="#classes"
-              className={`nav-item nav-item-my-classes${
-                page === 'classes' ? ' is-active' : ''
-              }`}
-              onClick={handleNavClick('classes')}
-            >
-              <img src="/assets/tuition.png" alt="" className="nav-thumbnail" />
-              <span className="nav-label">My classes</span>
-            </a>
+                    <Link to="/classes" className="nav-item nav-item-my-classes">
+                      <img src="/assets/tuition.png" alt="" className="nav-thumbnail" />
+                      <span className="nav-label">My classes</span>
+                    </Link>
 
-            <a
-              href="#dashboard2"
-              className={`nav-item nav-item-dashboard2${
-                page === 'dashboard2' ? ' is-active' : ''
-              }`}
-              onClick={handleNavClick('dashboard2')}
-            >
-              <img src="/assets/icon-dashboard.svg" alt="" className="nav-thumbnail" />
-              <span className="nav-label">dashboard2</span>
-            </a>
+                    <Link to="/dashboard2" className="nav-item nav-item-dashboard2">
+                      <img src="/assets/icon-dashboard.svg" alt="" className="nav-thumbnail" />
+                      <span className="nav-label">Dashboard2</span>
+                    </Link>
 
+                    <Link to="/students" className="nav-item nav-item-students">
+                      <img src="/assets/student-male.png" alt="" className="nav-thumbnail" />
+                      <span className="nav-label">Students</span>
+                    </Link>
 
-            <a
-              href="#students"
-              className={`nav-item nav-item-students${
-                page === 'students' ? ' is-active' : ''
-              }`}
-              onClick={handleNavClick('students')}
-            >
-              <img
-                src="/assets/student-male.png"
-                alt=""
-                className="nav-thumbnail"
-              />
-              <span className="nav-label">Students</span>
-            </a>
+                    <Link to="/analytics" className="nav-item nav-item-analytics">
+                      <img src="/assets/analytics.png" alt="Analytics" className="nav-thumbnail" />
+                      <span className="nav-label">Analytics</span>
+                    </Link>
 
-            <a
-              href="#analytics"
-              className={`nav-item nav-item-analytics${
-                page === 'analytics' ? ' is-active' : ''
-              }`}
-              onClick={handleNavClick('analytics')}
-            >
-              <img src="/assets/analytics.png" alt="Analytics" className="nav-thumbnail" />
-              <span className="nav-label">Analytics</span>
-            </a>
+                    <Link to="/profile" className="nav-item nav-item-profile">
+                      <img src="/assets/icon-profile.svg" alt="" className="nav-icon" />
+                      <span className="nav-label">Profile</span>
+                    </Link>
 
-            <a
-              href="#profile"
-              className={`nav-item nav-item-profile${
-                page === 'profile' ? ' is-active' : ''
-              }`}
-              onClick={handleNavClick('profile')}
-            >
-              <img src="/assets/icon-profile.svg" alt="" className="nav-icon" />
-              <span className="nav-label">Profile</span>
-            </a>
+                    <Link to="/support" className="nav-item nav-item-support">
+                      <img src="/assets/online-support.png" alt="" className="nav-thumbnail" />
+                      <span className="nav-label">Support</span>
+                    </Link>
 
-            <a
-              href="#support"
-              className={`nav-item nav-item-support${
-                page === 'support' ? ' is-active' : ''
-              }`}
-              onClick={handleNavClick('support')}
-            >
-              <img
-                src="/assets/online-support.png"
-                alt=""
-                className="nav-thumbnail"
-              />
-              <span className="nav-label">Support</span>
-            </a>
+                    <Link to="/test" className="nav-item nav-item-test">
+                      <span className="nav-label">Test</span>
+                    </Link>
 
-              {/* Option  below to be removed after testing */}
-            <a
-              href="#test"
-              className={`nav-item nav-item-test${
-                page === 'test' ? ' is-active' : ''
-              }`}
-              onClick={handleNavClick('test')}
-            >
-              <span className="nav-label">Test</span>
-            </a>
+                    <div className="nav-spacer" />
 
-            <div className="nav-spacer" />
+                    <button className="nav-item nav-item-logout" onClick={() => window.location.href = '/logout'}>
+                      <img src="/assets/icon-logout.svg" alt="" className="nav-icon" />
+                      <span className="nav-label">Log out</span>
+                    </button>
+                  </nav>
+                </aside>
 
-            <a className="nav-item nav-item-logout" href="#">
-              <img src="/assets/icon-logout.svg" alt="" className="nav-icon" />
-              <span className="nav-label">Log out</span>
-            </a>
-          </nav>
-        </aside>
-
-        {page === 'dashboard' && (
-          <DashboardPage
-            classes={classes}
-            onAssignClass={handleAssignClass}
-            onRemoveClass={handleRemoveClass}
-          />
-        )}
-        {page === 'classes' && (
-          <MyClassesPage classes={classes.filter((cls) => cls.assigned)} />
-        )}
-        {page === 'students' && <StudentsPage />}
-        {page === 'profile' && <ProfilePage />}
-        {page === 'analytics' && <AnalyticsPage />}
-        {page === 'dashboard2' && <DashboardPage2 
-          classes={classes}
-          onAssignClass={handleAssignClass}
-          onRemoveClass={handleRemoveClass}
-        />} 
-        {page === 'support' && <SupportPage />}
-         {page === 'test' && <TestPage />}  {/* REMOVE AFTER TESTING */}
-      </div>
-    </div>
+                <Routes>
+                  <Route path="dashboard" element={<DashboardPage API_BASE_URL={API_BASE_URL}/>} />
+                  <Route path="classes" element={<MyClassesPage API_BASE_URL={API_BASE_URL}/>} />
+                  <Route path="students" element={<StudentsPage API_BASE_URL={API_BASE_URL}/>} />
+                  <Route path="profile" element={<ProfilePage API_BASE_URL={API_BASE_URL}/>} />
+                  <Route path="analytics" element={<AnalyticsPage API_BASE_URL={API_BASE_URL}/>} />
+                  <Route path="dashboard2" element={<DashboardPage2 API_BASE_URL={API_BASE_URL}/>} />
+                  <Route path="support" element={<SupportPage API_BASE_URL={API_BASE_URL}/>} />
+                  <Route path="test" element={<TestPage API_BASE_URL={API_BASE_URL}/>} />
+                  <Route path="logout" element={<Logout setIsAuthenticated={setIsAuthenticated} API_BASE_URL={API_BASE_URL}/>} />
+                </Routes>
+              </div>
+            </div>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
 

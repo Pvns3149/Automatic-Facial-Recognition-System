@@ -19,7 +19,7 @@ def create_app(config_name):
     migrate.init_app(app, db)
 
     #Allow all origins
-    CORS(app)
+    CORS(app, supports_credentials=True)
 
     # Register blueprints
     from app.routes import api_bp

@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-
-function HealthCheck() {
+function HealthCheck({ API_BASE_URL }) {
   const [users, setUsers] = useState([])
   const [apiStatus, setApiStatus] = useState('checking...')
 

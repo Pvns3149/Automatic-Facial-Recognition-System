@@ -2,6 +2,7 @@ from app import db
 from pgvector.sqlalchemy import VECTOR
 from sqlalchemy.dialects.postgresql import TEXT, INTEGER, BOOLEAN
 from sqlalchemy.dialects.postgresql import ARRAY
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class Sample(db.Model):
     #student table
@@ -79,6 +80,7 @@ class Educator(db.Model):
     def to_dict(self):
         "Convert Educator object to dictionary."
         return {
+            "id": self.educatorid,
             "name": self.educatorname,
             "email": self.educatoremail,
             "phone": self.educatorphone,
@@ -89,6 +91,19 @@ class Educator(db.Model):
 
     def __repr__(self):
         return f"<Educator {self.educatorid}>"
+
+    
+        # Prevent plaintext password from being read
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+    
+    @password.setter
+    def password(self, password):
+        self.educatorpass = generate_password_hash(password)
+
+    def verify_password(self, password):  
+        return check_password_hash(self.educatorpass, password)
 
 class Class(db.Model):
     __tablename__ = "class"

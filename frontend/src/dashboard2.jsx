@@ -1,8 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
-import { UNIVERSITY_WEEK1_START } from './data';
 import {computeTeachingWeek, capitalizeFirstLetter} from './ClassUtils';
 
-function DashboardPage2() {
+function DashboardPage2({ API_BASE_URL }) {
   const today = new Date();
 
   //test friday date
@@ -18,9 +17,9 @@ function DashboardPage2() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
   
-  const startWeek = UNIVERSITY_WEEK1_START;
+  const startWeek = new Date('2026-03-02T00:00:00'); //Set to week start
   const [currentClass, setClass] = useState([]);
   const [assignedClasses, setAssignedClasses] = useState([]);
   const [allClasses, setAllClasses] = useState([]);
@@ -29,7 +28,7 @@ function DashboardPage2() {
   //Function to remove classes
   const onRemoveClass = async (classId, className, classCode) => {
     try{
-        const response = await fetch(`${API_BASE_URL}/removeClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id: "LEC001", classId: classId }) })    
+        const response = await fetch(`${API_BASE_URL}/removeClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ classId: classId }) })    
         if (!response.ok) {
             throw new Error('Server connection error');
         }
@@ -49,7 +48,7 @@ function DashboardPage2() {
   //Function to add classes
   const onAssignClass = async (classId, className, classCode) => {
     try{
-        const response = await fetch(`${API_BASE_URL}/addClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id: "LEC001", classId: classId }) }) 
+        const response = await fetch(`${API_BASE_URL}/addClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({classId: classId }) }) 
         if (response.status === 409) {
           alert(`You are already assigned to ${classCode} - ${className}`);
           return;
@@ -74,7 +73,7 @@ function DashboardPage2() {
   //Retreive assigned classes
   const getUserClasses = async () => {
       try{
-      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: 3}) }) //test to set Friday as current date
+      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: 3}) }) //test to set Friday as current date
       const data = await response.json();
       setAssignedClasses(data.classes);
       console.log('Return User classes data:', data.classes);
@@ -158,9 +157,10 @@ function DashboardPage2() {
   }
 
   const getDashboardClass = async () => {
+     console.log("Cookies:", document.cookie);
       try{
       //const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: currentWeek, dashboard: true, session: "Autumn " + year, time: isoString }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
-      const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: 3, dashboard: true, session: "Autumn " + year, time: isoString }) }) //test to set Friday as current date
+      const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: 3, dashboard: true, session: "Autumn " + year, time: isoString }) }) //test to set Friday as current date
       if (response.status === 601) {
         //No classes are happening now
         console.log("No classes happening now");
@@ -196,7 +196,7 @@ function DashboardPage2() {
     fetchData();
 
     //Set interval to fetch data every 15 minutes (1500000 ms) ||Use 1 minute (60000 ms) for testing
-    const interval = setInterval(fetchData, 60000);
+    const interval = setInterval(fetchData, 1500000);
 
     return () => clearInterval(interval);
   }, []);
@@ -283,12 +283,6 @@ function DashboardPage2() {
               onClick={() => setShowAddModal(true)}
             >
               + Add
-            </button>
-            <button type="button" 
-            className="btn btn-secondary"
-            onClick={() => setShowEditModal(true)}
-            >
-              Edit
             </button>
             <button
               type="button"

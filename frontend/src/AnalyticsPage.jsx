@@ -3,7 +3,6 @@ import {ChangeClass, getAvailableWeeks, getMaxAvailableWeek, capitalizeFirstLett
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // Converts polar coordinates (angle + radius) to x/y point on SVG canvas.
 function polarToCartesian(cx, cy, r, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
@@ -36,7 +35,7 @@ function buildSmoothPath(points) {
   return path;
 }
 
-function AnalyticsPage() {
+function AnalyticsPage({ API_BASE_URL }) {
   // Points to the DOM area that we capture for PDF export.
   const reportContentRef = useRef(null);
   // Used to disable the report button and show loading text while exporting.
@@ -78,7 +77,7 @@ function AnalyticsPage() {
 
   const getClasses = async () => {
     try{
-      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: filters.week }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: filters.week }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
       if (!response.ok) {
         throw new Error('Server connection error');
       }
