@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { useState } from 'react';
-import DashboardPage from './DashboardPage';
+//import DashboardPage from './DashboardPage';
 import SupportPage from './SupportPage';
-import MyClassesPage from './MyClassesPage';
+//import MyClassesPage from './MyClassesPage';
 import StudentsPage from './StudentsPage';
 import TestPage from './test';
 import DashboardPage2 from './dashboard2';
@@ -52,19 +52,9 @@ function App() {
               <div className="app-body">
                 <aside className="nav-bar">
                   <nav className="nav-items">
-                    <Link to="/dashboard" className="nav-item nav-item-dashboard">
-                      <img src="/assets/icon-dashboard.svg" alt="" className="nav-icon" />
-                      <span className="nav-label">Dashboard</span>
-                    </Link>
-
-                    <Link to="/classes" className="nav-item nav-item-my-classes">
-                      <img src="/assets/tuition.png" alt="" className="nav-thumbnail" />
-                      <span className="nav-label">My classes</span>
-                    </Link>
-
                     <Link to="/dashboard2" className="nav-item nav-item-dashboard2">
                       <img src="/assets/icon-dashboard.svg" alt="" className="nav-thumbnail" />
-                      <span className="nav-label">Dashboard2</span>
+                      <span className="nav-label">Dashboard</span>
                     </Link>
 
                     <Link to="/students" className="nav-item nav-item-students">
@@ -101,8 +91,6 @@ function App() {
                 </aside>
 
                 <Routes>
-                  <Route path="dashboard" element={<DashboardPage API_BASE_URL={API_BASE_URL}/>} />
-                  <Route path="classes" element={<MyClassesPage API_BASE_URL={API_BASE_URL}/>} />
                   <Route path="students" element={<StudentsPage API_BASE_URL={API_BASE_URL}/>} />
                   <Route path="profile" element={<ProfilePage API_BASE_URL={API_BASE_URL}/>} />
                   <Route path="analytics" element={<AnalyticsPage API_BASE_URL={API_BASE_URL}/>} />
