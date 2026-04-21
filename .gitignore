@@ -217,3 +217,7 @@ yarn-error.log*
 
 # insightface
 .insightface/
+
+# package JSONs
+package-lock.json
+package.json
