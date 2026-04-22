@@ -1,5 +1,5 @@
 
-export const computeTeachingWeek = (startWeek) => {
+export const computeTeachingWeek = (startWeek, weekOfBreak) => {
     const today = new Date();
     const weekMs = 7 * 24 * 60 * 60 * 1000;
     const diffMs = today - startWeek;
@@ -10,7 +10,17 @@ export const computeTeachingWeek = (startWeek) => {
     }
 
     const diffWeeks = Math.floor(diffMs / weekMs);
-    const rawWeek = diffWeeks + 1; // Week 1 during the first 7 days, Week 2 in the next 7, etc.
+    var rawWeek = diffWeeks + 1; // Week 1 during the first 7 days, Week 2 in the next 7, etc.
+    
+    // Make computing teaching week "mid-session-break-aware"
+    // e.g. If the 8th week is a break, should the current week be the 8th week, set the week to teaching week 7
+    //      If the current week is the 9th week (after the break week), set the week to teaching week 8 etc
+    if (rawWeek == weekOfBreak) {
+      rawWeek = -1;
+    } 
+    else if (rawWeek > weekOfBreak) {
+      rawWeek = rawWeek - 1;
+    }
 
     // Counter goes up to Week 13 and then stays there.
     return rawWeek > 13 ? 13 : rawWeek;

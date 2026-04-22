@@ -168,6 +168,11 @@ def get_dashboard_class():
     #Data verification
     if not data or not data.get("session") or not data.get("time") or not data.get("week"):
         return jsonify({"error": "Missing data"}), 400
+    
+    # The current week, mathematically speaking, is a break week, refuse to show any running classes
+    # "-1" is passed from the frontend to indicate that this week is a break week
+    if data.get("week") == -1:
+        return jsonify({"error": "Break week, no classes happening now"}), 602
 
     class_ids = get_classes_by_educator_id(request.user_id)
 
@@ -195,7 +200,7 @@ def get_dashboard_class():
 
         if class_start < current_time and class_end > current_time:
             print ("Class found " + str(class_record.classid))
-            class_record = db.session.query(
+            class_stats = db.session.query(
                 Class.classid,
                 Class.academicsession,
                 Class.subjectcode,
@@ -218,18 +223,25 @@ def get_dashboard_class():
                 Class.classtype
             ).first()
 
-            print("Class record found " + str(class_record.classid))
+            # If no class records have been found for the current week.
+            # This error will happen if the current week is set to a week
+            # where the Attendance table has no records of yet
+            # due to admin-related human errors.
+            if not class_stats:
+                return jsonify({"error": "No classes happening now"}), 601
+
+            print("Class record found " + str(class_stats.classid))
 
             response = {
-                "id": class_record.classid,
-                "session": class_record.academicsession,
-                "subjectCode": class_record.subjectcode,
-                "subjectName": class_record.subjectname,
-                "timeSlot": class_record.classstarttime + " - " + class_record.classendtime,
-                "classType": class_record.classtype,
-                "totalStudents": class_record.total_count,
-                "presentStudents": class_record.present_count,
-                "day": class_record.classdayofweek
+                "id": class_stats.classid,
+                "session": class_stats.academicsession,
+                "subjectCode": class_stats.subjectcode,
+                "subjectName": class_stats.subjectname,
+                "timeSlot": class_stats.classstarttime + " - " + class_stats.classendtime,
+                "classType": class_stats.classtype,
+                "totalStudents": class_stats.total_count,
+                "presentStudents": class_stats.present_count,
+                "day": class_stats.classdayofweek
             }
             #print(response)
             #print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOO")

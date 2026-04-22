@@ -20,7 +20,7 @@ function DashboardPage({ API_BASE_URL, week, session }) {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [reset, setReset] = useState(false);
 
-  
+
   const startWeek = new Date('2026-03-02T00:00:00'); //Set to week start
   const [currentClass, setClass] = useState([]);
   const [assignedClasses, setAssignedClasses] = useState([]);
@@ -185,13 +185,20 @@ function DashboardPage({ API_BASE_URL, week, session }) {
      console.log("Cookies:", document.cookie);
       try{
       //const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: week, dashboard: true, session: "Autumn " + year, time: isoString }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
-      const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: 3, session: session + " " + year, time: isoString }) }) //week set to 3 pending data insert
+      const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: week, session: session + " " + year, time: isoString }) }) //week set to 3 pending data insert
       if (response.status === 601) {
         //No classes are happening now
         console.log("No classes happening now");
         setClass({
           "id": -1,
           "subjectCode": "No currently running classes",
+        });
+        return;
+      }
+      else if (response.status === 602) {
+        setClass({
+          "id": -1,
+          "subjectCode": "No classes are run during the break",
         });
         return;
       }
@@ -397,7 +404,7 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
           {currentClass.totalStudents ? (
             <h3 className="dashboard-panel-title">Key Attendance Metrics [{currentClass.subjectCode} - {currentClass.subjectName}]</h3>
           ) : ( 
-            <h3 className="dashboard-panel-title">Key Attendance Metrics [No classes currently running]</h3>
+            <h3 className="dashboard-panel-title">Key Attendance Metrics [{currentClass.subjectCode}]</h3>
           )}
           <div className="dashboard-classes-actions">
             <button
@@ -457,7 +464,7 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
           <section className="classes-chart-row">
             <article className="classes-chart-panel">
               <div className="classes-week-header">
-                <span className="classes-week-label-text">WEEK {week}</span>
+                <span className="classes-week-label-text">{week == -1 ? "BREAK WEEK" : `WEEK ${week}`}</span>
                 <div className="classes-week-divider" />
               </div>
               <div className="classes-chart-content">

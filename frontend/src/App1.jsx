@@ -17,7 +17,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false); 
   const [isAuthChecked, setIsAuthChecked] = useState(false);
-  const week = computeTeachingWeek(new Date('2026-03-02T00:00:00')); //CHANGE SESSION DATE HERE
+  const breakWeek = 8; //SET BREAK WEEK HERE
+  const week = computeTeachingWeek(new Date('2026-03-02T00:00:00'), breakWeek); //CHANGE SESSION DATE HERE
   const session = "Autumn"; //CHANGE SESSION HERE
 
   useEffect(() => {
