@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import {ChangeClass, capitalizeFirstLetter} from './ClassUtils';
 
 // CLASS ID HANDLING NOT COMPLETERD, CURRENTLY HARDCODED TO CLASS 3
-function StudentsPage({ API_BASE_URL, week }) {
+function StudentsPage({ API_BASE_URL }) {
   const [students, setStudents] = useState([]);
   const [filters, setFilters] = useState({
     studentId: '',

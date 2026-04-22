@@ -128,7 +128,7 @@ function App() {
 
                 <Routes>
                   <Route index element={<Navigate to="/dashboard" replace />} />
-                  <Route path="students" element={<StudentsPage API_BASE_URL={API_BASE_URL} week={week}/>} />
+                  <Route path="students" element={<StudentsPage API_BASE_URL={API_BASE_URL} />} />
                   <Route path="profile" element={<ProfilePage API_BASE_URL={API_BASE_URL}/>} />
                   <Route path="analytics" element={<AnalyticsPage API_BASE_URL={API_BASE_URL}/>} />
                   <Route path="dashboard" element={<DashboardPage API_BASE_URL={API_BASE_URL} week={week} session={session} />} />
