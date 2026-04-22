@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import {ChangeClass, capitalizeFirstLetter} from './ClassUtils';
 
 // CLASS ID HANDLING NOT COMPLETERD, CURRENTLY HARDCODED TO CLASS 3
-function StudentsPage({ API_BASE_URL }) {
+function StudentsPage({ API_BASE_URL, week }) {
   const [students, setStudents] = useState([]);
   const [filters, setFilters] = useState({
     studentId: '',
@@ -14,45 +14,12 @@ function StudentsPage({ API_BASE_URL }) {
   const [selectedId, setSelectedId] = useState('');
   const [current, setCurrent] = useState(null);
   
-  //Change this to global
-//   const [classList, setClassList] = useState([
-//   {
-//     "id": 3,
-//     "session": "Autumn 2026",
-//     "classType" :  "Lecture",
-//     "subjectCode" : "CSCI323",
-//     "subjectName" : "Modern Artificial Intelligence",
-//     "timeSlot" : "2:30 PM - 4:30 PM",
-//     "day" : "FRI"
-//   },
-//   {
-//     "id": 1,
-//     "session": "Spring 2025",
-//     "classType": "Lecture",
-//     "subjectCode": "ISIT312",
-//     "subjectName": "Big Data Management",
-//     "timeSlot": "4:30 PM - 6:30 PM",
-//     "day": "TUE"
-//   },
-//   {
-//     "id": 2,
-//     "session": "Spring 2025",
-//     "classType": "Tutorial",
-//     "subjectCode": "ISIT312",
-//     "subjectName": "Big Data Management",
-//     "timeSlot": "10:30 AM - 12:30 PM",
-//     "day": "MON"
-    
-//   }
-//     // getClasses()
-// ]);
-
 //Get students based on given parameters
   const getStudents = async () => {
     
       try{
         console.log(current.id)
-        const response = await fetch(`${API_BASE_URL}/getStudents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : appliedFilters.id, name : appliedFilters.name, classId : current?.id, week: appliedFilters.week }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+        const response = await fetch(`${API_BASE_URL}/getStudents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : appliedFilters.id, name : appliedFilters.name, classId : current?.id, week: appliedFilters.week }) }); 
         if (!response.ok) {
           throw new Error('Server connection error');
         }
@@ -71,7 +38,7 @@ function StudentsPage({ API_BASE_URL }) {
   //Retreive all classes assigned to the user 
   const getClasses = async () => {
     try{
-      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: 1 }) }); //CHANGE WEEK TO DYNAMIC VAR
+      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: week }) }); 
       if (!response.ok) {
         throw new Error('Server connection error');
       }

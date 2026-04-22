@@ -60,7 +60,7 @@ function AnalyticsPage({ API_BASE_URL }) {
   const getStudentAnalytics = async () => {
   
     try{
-      const response = await fetch(`${API_BASE_URL}/getStudents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ classId : selectedId, week: 0 }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+      const response = await fetch(`${API_BASE_URL}/getStudents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ classId : selectedId, week: 0 }) }); 
       if (!response.ok) {
         throw new Error('Server connection error');
       }
@@ -77,7 +77,7 @@ function AnalyticsPage({ API_BASE_URL }) {
 
   const getClasses = async () => {
     try{
-      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: filters.week }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: filters.week }) }); 
       if (!response.ok) {
         throw new Error('Server connection error');
       }

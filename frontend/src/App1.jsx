@@ -1,40 +1,76 @@
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 //import DashboardPage from './DashboardPage';
 import SupportPage from './SupportPage';
 //import MyClassesPage from './MyClassesPage';
 import StudentsPage from './StudentsPage';
 import TestPage from './test';
-import DashboardPage2 from './dashboard2';
+import DashboardPage from './DashboardPage';
 import AnalyticsPage from './AnalyticsPage';
 import ProfilePage from './ProfilePage';
 import LoginPage from './LoginPage';
 import Logout from './logout';
 import RegisterPage from './RegisterPage';
+import { computeTeachingWeek } from './ClassUtils';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false); 
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
+  const week = computeTeachingWeek(new Date('2026-03-02T00:00:00')); //CHANGE SESSION DATE HERE
+  const session = "Autumn"; //CHANGE SESSION HERE
 
-  // const handleLogout = async () => {
-  //   await fetch(`${API_BASE_URL}/logout`, { method: 'POST', credentials: 'include' });
-  //   setIsAuthenticated(false);
-  //   window.location.href = '/login';
-  // };
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/authCheck`, {method: 'GET',credentials: 'include'});
 
+        if (!response.ok) {
+          setIsAuthenticated(false);
+          return;
+        }
+
+        const data = await response.json();
+        setIsAuthenticated(Boolean(data.authenticated));
+      } catch {
+        setIsAuthenticated(false);
+      } finally {
+        setIsAuthChecked(true);
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
+
+
+
+  
   const ProtectedRoute = ({ children }) => {
-    return isAuthenticated ? children : <Navigate to="/login" />;
+    if (!isAuthChecked) {
+      return null;
+    }
+
+    return isAuthenticated ? children : <Navigate to="/login" replace />;
+  };
+
+  const PublicRoute = ({ children }) => {
+    if (!isAuthChecked) {
+      return null;
+    }
+
+    return isAuthenticated ? <Navigate to="/dashboard2" replace /> : children;
   };
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} API_BASE_URL={API_BASE_URL} />} />
-        <Route path="/register" element={<RegisterPage API_BASE_URL={API_BASE_URL} />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<PublicRoute><LoginPage setIsAuthenticated={setIsAuthenticated} API_BASE_URL={API_BASE_URL} /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><RegisterPage API_BASE_URL={API_BASE_URL} /></PublicRoute>} />
         
         <Route
           path="/*"
-          element={
+          element={<ProtectedRoute>
             <div className="app-shell">
               <header className="top-bar">
                 <div className="top-bar-bg">
@@ -52,7 +88,7 @@ function App() {
               <div className="app-body">
                 <aside className="nav-bar">
                   <nav className="nav-items">
-                    <Link to="/dashboard2" className="nav-item nav-item-dashboard2">
+                    <Link to="/dashboard" className="nav-item nav-item-dashboard">
                       <img src="/assets/icon-dashboard.svg" alt="" className="nav-thumbnail" />
                       <span className="nav-label">Dashboard</span>
                     </Link>
@@ -91,17 +127,19 @@ function App() {
                 </aside>
 
                 <Routes>
-                  <Route path="students" element={<StudentsPage API_BASE_URL={API_BASE_URL}/>} />
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route path="students" element={<StudentsPage API_BASE_URL={API_BASE_URL} week={week}/>} />
                   <Route path="profile" element={<ProfilePage API_BASE_URL={API_BASE_URL}/>} />
                   <Route path="analytics" element={<AnalyticsPage API_BASE_URL={API_BASE_URL}/>} />
-                  <Route path="dashboard2" element={<DashboardPage2 API_BASE_URL={API_BASE_URL}/>} />
+                  <Route path="dashboard" element={<DashboardPage API_BASE_URL={API_BASE_URL} week={week} session={session} />} />
                   <Route path="support" element={<SupportPage API_BASE_URL={API_BASE_URL}/>} />
                   <Route path="test" element={<TestPage API_BASE_URL={API_BASE_URL}/>} />
                   <Route path="logout" element={<Logout setIsAuthenticated={setIsAuthenticated} API_BASE_URL={API_BASE_URL}/>} />
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </div>
             </div>
-          }
+          </ProtectedRoute>}
         />
       </Routes>
     </Router>

@@ -166,6 +166,10 @@ def get_dashboard_class():
     data = request.get_json()
     class_ids = get_classes_by_educator_id(data, request.user_id)
 
+    #Check if there are classes
+    if (isinstance(class_ids, tuple)):
+        return jsonify({"error": "No classes found for given user"}), 404
+
     # Frontend always return UTC+0 at the time of interacting with the dashboard
     current_time = datetime.fromisoformat(data["time"].replace("Z", "+00:00"))
     current_day = current_time.strftime("%a").upper()
@@ -239,6 +243,10 @@ def get_classes():
     #Data receival
     data = request.get_json()
     class_ids = get_classes_by_educator_id(data, request.user_id)
+
+    #Check if there are classes
+    if (isinstance(class_ids, tuple)):
+        return jsonify({"error": "No classes found for given user"}), 404
 
     # Retrieve class information
     class_records = Class.query.filter(Class.classid.in_(class_ids)).all()
@@ -410,6 +418,21 @@ def login():
     else:
         #show the login page with an error message
         return jsonify({"success": False, "message": "Invalid credentials"}), 401
+
+
+@api_bp.route('/authCheck', methods=['GET'])
+def auth_status():
+    token = request.cookies.get('auth_token')
+    if not token:
+        return jsonify({"err": "No Auth token"}), 200
+
+    user_id = validate_token(token)
+    if user_id in ("Token expired", "Invalid token"):
+        response = jsonify({"authenticated": False})
+        response.delete_cookie("auth_token", path="/")
+        return response, 200
+
+    return jsonify({"authenticated": True}), 200
     
 
 
@@ -443,6 +466,16 @@ def register():
     db.session.commit()
 
     return jsonify({"message": "Registration successful"}), 200
+
+@api_bp.route('/logout', methods=['POST'])
+@token_required
+def logout():
+ 
+    response = jsonify({"message": "Logout successful"})
+    response.set_cookie("reset", expires=0)
+    response.delete_cookie("auth_token", path="/")
+    return response, 200
+
 # Sample databse actions
 
 # @api_bp.route("/users/<int:user_id>", methods=["GET"])
