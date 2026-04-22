@@ -464,7 +464,7 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
           <section className="classes-chart-row">
             <article className="classes-chart-panel">
               <div className="classes-week-header">
-                <span className="classes-week-label-text">{week == -1 ? "BREAK WEEK" : `WEEK ${week}`}</span>
+                <span className="classes-week-label-text">{week == -1 ? "BREAK" : `WEEK ${week}`}</span>
                 <div className="classes-week-divider" />
               </div>
               <div className="classes-chart-content">

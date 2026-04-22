@@ -22,8 +22,9 @@ export const computeTeachingWeek = (startWeek, weekOfBreak) => {
       rawWeek = rawWeek - 1;
     }
 
-    // Counter goes up to Week 13 and then stays there.
-    return rawWeek > 13 ? 13 : rawWeek;
+    // Counter goes up to Week 13. If the current week is 14 or above,
+    // this means that we're out of session.
+    return rawWeek > 13 ? -1 : rawWeek;
   };
 
 

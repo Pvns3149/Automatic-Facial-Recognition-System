@@ -170,9 +170,9 @@ def get_dashboard_class():
         return jsonify({"error": "Missing data"}), 400
     
     # The current week, mathematically speaking, is a break week, refuse to show any running classes
-    # "-1" is passed from the frontend to indicate that this week is a break week
+    # "-1" is passed from the frontend to indicate that this week is either a break week, or out of session
     if data.get("week") == -1:
-        return jsonify({"error": "Break week, no classes happening now"}), 602
+        return jsonify({"error": "Break, no classes happening now"}), 602
 
     class_ids = get_classes_by_educator_id(request.user_id)
 
