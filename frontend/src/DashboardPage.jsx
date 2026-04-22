@@ -73,7 +73,7 @@ function DashboardPage({ API_BASE_URL, week, session }) {
   //Retreive assigned classes
   const getUserClasses = async () => {
       try{
-      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: week}) }) //Pass week to conform to standards
+      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({}) }) //Pass nothing, as no extra parameters are needed
       const data = await response.json();
       if (!data) {
         return (
@@ -185,7 +185,7 @@ function DashboardPage({ API_BASE_URL, week, session }) {
      console.log("Cookies:", document.cookie);
       try{
       //const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: week, dashboard: true, session: "Autumn " + year, time: isoString }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
-      const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: 3, dashboard: true, session: session + " " + year, time: isoString }) }) //week set to 3 pending data insert
+      const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: 3, session: session + " " + year, time: isoString }) }) //week set to 3 pending data insert
       if (response.status === 601) {
         //No classes are happening now
         console.log("No classes happening now");

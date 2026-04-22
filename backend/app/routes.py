@@ -164,10 +164,15 @@ def get_dashboard_class():
 
     #Data receival
     data = request.get_json()
-    class_ids = get_classes_by_educator_id(data, request.user_id)
+    
+    #Data verification
+    if not data or not data.get("session") or not data.get("time") or not data.get("week"):
+        return jsonify({"error": "Missing data"}), 400
+
+    class_ids = get_classes_by_educator_id(request.user_id)
 
     #Check if there are classes
-    if (isinstance(class_ids, tuple)):
+    if (len(class_ids) == 0):
         return jsonify({"error": "No classes found for given user"}), 404
 
     # Frontend always return UTC+0 at the time of interacting with the dashboard
@@ -239,13 +244,11 @@ def get_dashboard_class():
 @api_bp.route("/getClasses", methods=["POST"])
 @token_required
 def get_classes():
-
-    #Data receival
-    data = request.get_json()
-    class_ids = get_classes_by_educator_id(data, request.user_id)
+    # /getClasses endpoint requires no parameters
+    class_ids = get_classes_by_educator_id(request.user_id)
 
     #Check if there are classes
-    if (isinstance(class_ids, tuple)):
+    if (len(class_ids) == 0):
         return jsonify({"error": "No classes found for given user"}), 404
 
     # Retrieve class information
@@ -541,23 +544,11 @@ def logout():
 #     return jsonify({"message": "User deleted successfully"})
 
 
-# Helper functions
-def studentCount(class_id, week, present : None ):
-    if present != None:
-        count = Attendance.query.filter_by(classid = class_id, weekheld = week, presentstate = present).count()
-    else:
-        count = Attendance.query.filter_by(classid = class_id, weekheld = week).count()
-    return count
-
-def get_classes_by_educator_id(data, id):
-    #Data verification
-    if not data or not id or not data.get("week"): #WEEK DATA SHOULD BE IN COOKIE ON LOGIN
-        return jsonify({"error": "ID or week not provided"}), 400
-    
+def get_classes_by_educator_id(id):    
     # Check if user exists and get id of all classes the user has access to
     class_ids = MyClasses.query.with_entities(MyClasses.classid).filter_by(educatorid = id).all()
     if not class_ids:
-        return jsonify({"error": "No classes found for given user"}), 404
+        return []
     
     return [id[0] for id in class_ids]
 

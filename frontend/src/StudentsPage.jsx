@@ -38,7 +38,7 @@ function StudentsPage({ API_BASE_URL, week }) {
   //Retreive all classes assigned to the user 
   const getClasses = async () => {
     try{
-      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: week }) }); 
+      const response = await fetch(`${API_BASE_URL}/getClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({}) }); 
       if (!response.ok) {
         throw new Error('Server connection error');
       }
