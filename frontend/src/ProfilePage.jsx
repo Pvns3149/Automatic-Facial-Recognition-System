@@ -34,7 +34,7 @@ const [educator, setEducator] = useState("");
         <div className="profile-avatar-column">
           <div className="profile-avatar-frame">
             <img
-              src="./public/assets/profile-picture.png"
+              src="/assets/profile-picture.png"
               className="profile-avatar"
             />
           </div>
