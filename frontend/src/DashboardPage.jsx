@@ -130,7 +130,7 @@ function DashboardPage({ API_BASE_URL, week, session }) {
     
       console.log("Submitting attendance with image data:", img);
       try{
-        const response = await fetch(`${API_BASE_URL}/updateAttendance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id : currentClass.id, week : 3, group_photo: img, className: currentClass.subjectName, classCode: currentClass.subjectCode, timeSlot: currentClass.timeSlot}) }) //Week set to 3 pending data insert
+        const response = await fetch(`${API_BASE_URL}/updateAttendance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id : currentClass.id, week : week, group_photo: img, className: currentClass.subjectName, classCode: currentClass.subjectCode, timeSlot: currentClass.timeSlot}) }) //Week set to 3 pending data insert
         if (response.ok) {
             alert('Attendance taken successfully');
         }else {
