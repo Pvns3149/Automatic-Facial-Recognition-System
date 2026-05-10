@@ -338,7 +338,7 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
                       <span>{cls.session}</span>
                       <span>{cls.subjectCode}</span>
                       <span>{cls.subjectName}</span>
-                      <span>{cls.timeSlot}</span>
+                      <span>{cls.day + " " + cls.timeSlot}</span>
                       <span>{cls.classType}</span>
                       <button
                         type="button"
@@ -589,7 +589,7 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
                     <span>{cls.session}</span>
                     <span>{cls.subjectCode}</span>
                     <span>{cls.subjectName}</span>
-                    <span>{cls.timeSlot}</span>
+                    <span>{cls.day + " " + cls.timeSlot}</span>
                     <span>{cls.classType}</span>
                     <button
                       type="button"
@@ -653,7 +653,7 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
                   <span>{cls.session}</span>
                   <span>{cls.subjectCode}</span>
                   <span>{cls.subjectName}</span>
-                  <span>{cls.timeSlot}</span>
+                  <span>{cls.day + " " + cls.timeSlot}</span>
                   <span>{cls.classType}</span>
                   <button
                     type="button"
