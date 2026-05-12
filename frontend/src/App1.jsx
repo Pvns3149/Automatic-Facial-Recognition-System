@@ -57,7 +57,7 @@ function App() {
       return null;
     }
 
-    return isAuthenticated ? <Navigate to="/dashboard2" replace /> : children;
+    return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
   };
 
   return (

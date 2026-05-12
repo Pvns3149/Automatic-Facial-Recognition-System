@@ -12,7 +12,6 @@ function LoginPage({setIsAuthenticated, API_BASE_URL}) {
     const response = await fetch(`${API_BASE_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email : email, passwd : password }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
     if (response.ok) {
         setIsAuthenticated(true);
-        window.location.href = '/dashboard2';
       return;
     }
     alert( 'Login failed. Please check your credentials and try again.');
