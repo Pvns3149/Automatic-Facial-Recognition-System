@@ -10,7 +10,6 @@ from app.facemodels import FacialRecognitionModel
 from zoneinfo import ZoneInfo
 from mailersend import MailerSendClient, EmailBuilder
 from functools import wraps
-from datetime import time
 import mailtrap as mt
 
 
