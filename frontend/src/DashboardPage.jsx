@@ -19,13 +19,15 @@ function DashboardPage({ API_BASE_URL, week, session }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [reset, setReset] = useState(false);
-
+  const [captureInterval, setCaptureInterval] = useState(null);
+  const [timerId, setTimerId] = useState(null);
+  const [remainingTime, setRemainingTime] = useState(null);
 
   const startWeek = new Date('2026-03-02T00:00:00'); //Set to week start
   const [currentClass, setClass] = useState([]);
   const [assignedClasses, setAssignedClasses] = useState([]);
   const [allClasses, setAllClasses] = useState([]);
-  // const currentWeek = computeTeachingWeek(startWeek);
+
   
   //Function to remove classes
   const onRemoveClass = async (classId, className, classCode) => {
@@ -125,8 +127,9 @@ function DashboardPage({ API_BASE_URL, week, session }) {
   }
 
   //submit attendannce image to backend for processing
-  const TakeAttendance = async (img) => {
-    if(window.confirm("Are you sure you want to submit attendance for this class? All students not currently in class will receive a non-attendance notification email.")){
+  const TakeAttendance = async (img, value) => {
+    console.log(value)
+    if(value == 1 || window.confirm("Are you sure you want to submit attendance for this class? All students not currently in class will receive a non-attendance notification email.")) {
     
       console.log("Submitting attendance with image data:", img);
       try{
@@ -145,7 +148,7 @@ function DashboardPage({ API_BASE_URL, week, session }) {
     }
   }
 
-  const TakePicture = () => {
+  const TakePicture = (value) => {
 
     if (currentClass.totalStudents === 0 || currentClass.totalStudents === undefined) {
       alert("No classes currently ongoing. Unable to take attendance.");
@@ -170,7 +173,7 @@ function DashboardPage({ API_BASE_URL, week, session }) {
           //Convert the canvas to a base64 image string and send to backend
           const imageData = canvas.toDataURL('image/png');
           console.log('Captured image data:', imageData);
-          TakeAttendance(imageData);
+          TakeAttendance(imageData, value);
 
           //Stop the webcam stream
           stream.getTracks().forEach((track) => track.stop());
@@ -282,6 +285,62 @@ function DashboardPage({ API_BASE_URL, week, session }) {
     setShowRemoveModal(false);
   };
 
+  const handleCaptureIntervalChange = (event) => {
+    const value = parseInt(event.target.value, 10);
+    setCaptureInterval(value);
+    event.target.value = '';
+
+    //Clear any existing timer
+    if (timerId) {
+      clearTimeout(timerId);
+      setTimerId(null);
+      setRemainingTime(null);
+    }
+
+    console.log('Selected interval value:', value);
+
+    if (value === 5) {
+      setRemainingTime(5); // Set remaining time to 5 seconds
+      const id = setTimeout(() => {
+        TakePicture(1);
+        setRemainingTime(null);
+        setTimerId(null);
+      }, 5000); // 5 seconds in milliseconds
+      setTimerId(id);
+    } else if (value) {
+      setRemainingTime(value * 60); // Set remaining time in seconds
+      const id = setTimeout(() => {
+        TakePicture(1); 
+        setRemainingTime(null);
+        setTimerId(null);
+      }, value * 60 * 1000); // Convert min to ms
+      setTimerId(id);
+    }
+  };
+
+  const handleCancelTimer = () => {
+    if (timerId) {
+      clearTimeout(timerId);
+      setTimerId(null);
+      setRemainingTime(null); // Clear the remaining time
+    }
+  };
+
+useEffect(() => {
+    if (remainingTime !== null) {
+      const interval = setInterval(() => {
+        setRemainingTime((prevTime) => {
+          if (prevTime <= 1) {
+            clearInterval(interval);
+            return null;
+          }
+          return prevTime - 1;
+        });
+      }, 1000); // Update every second
+
+      return () => clearInterval(interval);
+    }
+  }, [remainingTime]);
 
 if (assignedClasses === undefined || assignedClasses.length === 0) {
     return (
@@ -424,12 +483,70 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => TakePicture()}
+              onClick={() => TakePicture(0)}
             >
               Capture Attendance
             </button>
+            <select
+              id="dashboard-timer-select"
+              className="dashboard-filter-select"
+
+              onChange={handleCaptureIntervalChange}
+              value={captureInterval || ''}
+            >
+              <option value="">Capture Timer</option>
+              <option value="5">in 5 seconds</option>
+              <option value="15">in 15 Minutes</option>
+              <option value="20">in 20 Minutes</option>
+            </select>
+            {timerId && (
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={handleCancelTimer}
+              >
+                Cancel Timer
+            </button>
+            )}
+          {remainingTime !== null && (
+            <p className="timer-display">
+              Time Remaining: {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')}
+            </p>
+          )}
           </div>
         </div>
+        {/* <div className="capture-attendance-actions">
+          <select
+            className="capture-interval-dropdown"
+            onChange={handleCaptureIntervalChange}
+            value={captureInterval || ''}
+          >
+            <option value="">Select Interval</option>
+            <option value="15">15 Minutes</option>
+            <option value="20">20 Minutes</option>
+          </select>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => TakePicture()}
+          >
+            Capture Attendance
+          </button>
+          {timerId && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleCancelTimer}
+            >
+              Cancel Timer
+            </button>
+          )}
+          {remainingTime !== null && (
+            <p className="timer-display">
+              Time Remaining: {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')}
+            </p>
+          )}
+        </div> */}
 
         <section className="classes-stats-row">
         <article className="classes-stat-card">

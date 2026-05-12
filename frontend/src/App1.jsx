@@ -1,8 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-//import DashboardPage from './DashboardPage';
 import SupportPage from './SupportPage';
-//import MyClassesPage from './MyClassesPage';
 import StudentsPage from './StudentsPage';
 import TestPage from './test';
 import DashboardPage from './DashboardPage';
@@ -115,7 +113,7 @@ function App() {
                     </Link>
 
                     <Link to="/test" className="nav-item nav-item-test">
-                      <span className="nav-label">Test</span>
+                      <span className="nav-label">Connection Test</span>
                     </Link>
 
                     <div className="nav-spacer" />

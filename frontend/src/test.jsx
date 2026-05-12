@@ -2,29 +2,13 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 function HealthCheck({ API_BASE_URL }) {
-  const [users, setUsers] = useState([])
   const [apiStatus, setApiStatus] = useState('checking...')
+  const [dbStatus, setDbStatus] = useState('checking...')
 
   useEffect(() => {
     checkApiHealth()
-    fetchUsers()
+    checkDbHealth()
   }, [])
-
-  // const checkApiHealth = async () => {
-  //   try {
-  //     const data = await api.healthCheck()
-  //     setApiStatus(data.status)
-  //   } catch {
-  //     setApiStatus('disconnected')
-  //   }
-  // }
-  //   async healthCheck() {
-  //   const response = await fetch(`${API_BASE_URL}/health`);
-  //   if (!response.ok) {
-  //     throw new Error('Health check failed');
-  //   }
-  //   return response.json();
-  // }
 
   const checkApiHealth = async () => {
     try{
@@ -41,34 +25,21 @@ function HealthCheck({ API_BASE_URL }) {
     }
   }
 
-  // const fetchUsers = async () => {
-  //   try {
-  //     const data = await api.getUsers()
-  //     setUsers(data.users)
-  //   } catch (err) {
-  //     console.error('Failed to fetch users:', err)
-  //   }
-  // }
 
-  //   async getUsers() {
-  //   const response = await fetch(`${API_BASE_URL}/users`);
-  //   if (!response.ok) {
-  //     throw new Error('Failed to fetch users');
-  //   }
-  //   return response.json();
-  // },
-
-  const fetchUsers = async () => {
+  const checkDbHealth = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/users`);
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
       const data = await response.json();
-      setUsers(data.users)
+      if (data && Array.isArray(data.users)) {
+        setDbStatus('healthy')
+      }
     }
     catch (err) {
-      console.error('Failed to fetch users:', err)
+      console.error('DB error:', err)
+      setDbStatus('disconnected')
     }
   }
 
@@ -80,31 +51,18 @@ function HealthCheck({ API_BASE_URL }) {
       <h1>Facial Recognition System</h1>
       
       <div className="status-card">
-        <h2>API Status</h2>
+        <h2 style={{ color: 'grey' }}>API Status</h2>
         <p className={`status ${apiStatus === 'healthy' ? 'healthy' : 'error'}`}>
           {apiStatus}
         </p>
       </div>
 
-      {
-      <div className="card">
-        <h2>Users ({users.length})</h2>
-        {users.length === 0 ? (
-          <p>No users found. Check DB connection</p>
-        ) : (
-          <ul className="user-list">
-            {users.map((user) => (
-              <li key={user.id} className="user-item">
-                <div>
-                  <strong>{user.col1}</strong>
-                  <br />
-                  <small>{user.col2}</small>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div> }
+      <div className="status-card">
+        <h2 style={{ color: 'grey' }}>DB Connection Status</h2>
+        <p className={`status ${dbStatus === 'healthy' ? 'healthy' : 'error'}`}>
+          {dbStatus}
+        </p>
+      </div>
     </div>
   )
 }
