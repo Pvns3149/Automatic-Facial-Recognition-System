@@ -89,6 +89,10 @@ function StudentsPage({ API_BASE_URL }) {
           week,
           status: student.weeks[week] || 'present',
         }));
+      }).sort((a, b) => {
+        const weekDiff = Number(a.week) - Number(b.week);
+        if (weekDiff !== 0) return weekDiff;
+        return String(a.id).localeCompare(String(b.id));
       });
     }
 

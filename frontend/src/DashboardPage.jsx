@@ -230,8 +230,8 @@ function DashboardPage({ API_BASE_URL, week, session }) {
     };
     fetchData();
 
-    //Set interval to fetch data every 15 minutes (1500000 ms) ||Use 1 minute (60000 ms) for testing
-    const interval = setInterval(fetchData, 1500000);
+    //Set interval to fetch data every 15 minutes (900000 ms) ||Use 1 minute (60000 ms) for testing
+    const interval = setInterval(fetchData, 300000);
 
     return () => clearInterval(interval);
   }, []);
