@@ -742,6 +742,17 @@ body {
   border-color: #1f2933;
 }
 
+.dashboard-filter-select{
+  width: 120px;
+  border-radius: 4px;
+  border: 1px solid #d0d0d0;
+  padding: 6px 8px;
+  font-family: "Microsoft Sans Serif", system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  color: #111827;
+}
+
 .calendar-header {
   display: flex;
   align-items: center;

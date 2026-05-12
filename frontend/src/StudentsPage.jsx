@@ -81,6 +81,17 @@ function StudentsPage({ API_BASE_URL }) {
     const idFilter = appliedFilters.studentId;
     const nameFilter = appliedFilters.name.trim().toLowerCase();
 
+    if (appliedFilters.week === '0') {
+      //Handle "All Weeks" case
+      return students.flatMap((student) => {
+        return Object.keys(student.weeks || {}).map((week) => ({
+          ...student,
+          week,
+          status: student.weeks[week] || 'present',
+        }));
+      });
+    }
+
     return students.filter((student) => {
       if (idFilter && student.id !== idFilter) {
         return false;
@@ -89,7 +100,11 @@ function StudentsPage({ API_BASE_URL }) {
         return false;
       }
       return true;
-    });
+    }).map((student) => ({
+      ...student,
+      week: appliedFilters.week, 
+      status: student.weeks?.[appliedFilters.week] || 'present',
+    }));
   }, [students, appliedFilters]);
 
   const handleFilterChange = (field) => (event) => {
@@ -102,22 +117,28 @@ function StudentsPage({ API_BASE_URL }) {
     setAppliedFilters(filters);
   };
 
-  const handleSetStatus = async (studentId, status) => {
-    try{
-      const response = await fetch(`${API_BASE_URL}/changeAttendance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : studentId, classId : current?.id, week: activeWeek, attending: status }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+  const handleSetStatus = async (studentId, status, week) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/changeAttendance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: studentId,
+          classId: current?.id,
+          week: week || activeWeek, 
+          attending: status,
+        }),
+      });
       if (!response.ok) {
-          throw new Error('Update failed');
+        throw new Error('Update failed');
+      } else {
+        alert(`Status for student ${studentId} updated to ${status} for week ${week || activeWeek}`);
       }
-      else {
-        alert(`Status for student ${studentId} updated to ${status} for week ${activeWeek}`);
-      }
-      // Refresh students after status change
-      await getStudents(); 
-    }   
-    catch (err) {
+      //Refresh students after status change
+      await getStudents();
+    } catch (err) {
       alert(err.message);
     }
-
   };
 
     //Default display if no classes assigned to user
@@ -244,24 +265,23 @@ function StudentsPage({ API_BASE_URL }) {
         </div>
 
         {filteredStudents.map((student, index) => {
-          const weeks = student.weeks || {};
-          const status = weeks[activeWeek] || 'present';
+          const status = student.status || 'present';
           const isPresent = status === 'present';
 
           return (
-            <div key={student.id} className="students-row">
+            <div key={`${student.id}-${student.week}`} className="students-row">
               <span className="students-cell-index">{index + 1}</span>
               <span>{student.id}</span>
               <span>{student.email}</span>
               <span>{student.name}</span>
-              <span>{`Week ${activeWeek}`}</span>
+              <span>{`Week ${student.week}`}</span>
               <span className="students-status-buttons">
                 <button
                   type="button"
                   className={`students-status-button students-status-absent${
                     !isPresent ? ' is-active' : ''
                   }`}
-                  onClick={() => handleSetStatus(student.id, 'absent')}
+                  onClick={() => handleSetStatus(student.id, 'absent', student.week)}
                 >
                   Absent
                 </button>
@@ -270,7 +290,7 @@ function StudentsPage({ API_BASE_URL }) {
                   className={`students-status-button students-status-present${
                     isPresent ? ' is-active' : ''
                   }`}
-                  onClick={() => handleSetStatus(student.id, 'present')}
+                  onClick={() => handleSetStatus(student.id, 'present', student.week)}
                 >
                   Present
                 </button>
