@@ -18,7 +18,7 @@ def create_app(config_name):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    #Allow all origins
+    #Allow all origins (Change in Prod)
     CORS(app, supports_credentials=True)
 
     # Register blueprints

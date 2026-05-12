@@ -5,21 +5,6 @@ from datetime import datetime, timedelta
 from app import create_app
 from app.models import Sample #Change to class
 
-# #Setup scheduler and task
-# def check_time():
-#     current_time = datetime.now()
-#     target_time = current_time + timedelta(minutes=15)
-
-#     classes = Sample.query.filter(Sample.end_time.between(current_time, target_time)).all()
-#         #Send email
-
-
-# #Scheduler init
-# def start_scheduler():
-#     scheduler = BackgroundScheduler()
-#     scheduler.add_job(check_time, 'interval', minutes=15)
-#     scheduler.start()
-
 
 
 #Load env files and config
