@@ -430,7 +430,8 @@ def login():
         token = generate_auth_token(login.educatorid)
 
         response = jsonify({"message": "Login successful"})
-        response.set_cookie("auth_token", token, httponly=True, samesite="lax", secure=False, path="/") #change secure if HTTPS is used
+        response.set_cookie("auth_token", token, httponly=True, samesite="None", secure=True, path="/") #change secure if HTTPS is used
+        #response.set_cookie("auth_token", token, httponly=True, samesite="lax", secure=False, path="/") #change secure if HTTPS is used
         return response
     else:
         #show the login page with an error message
@@ -590,5 +591,7 @@ def send_email(toEmail, className, classCode, timeSlot, name):
     )
 
     client = mt.MailtrapClient(token=api_key, sandbox=True, inbox_id=4622247)
+    client.send(mail)
     return
    
+
