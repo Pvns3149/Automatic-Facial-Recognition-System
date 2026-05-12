@@ -10,6 +10,9 @@ from app.facemodels import FacialRecognitionModel
 from zoneinfo import ZoneInfo
 from mailersend import MailerSendClient, EmailBuilder
 from functools import wraps
+from datetime import time
+import mailtrap as mt
+
 
 load_dotenv()
 
@@ -117,17 +120,17 @@ def update_attendance_from_photo():
         # There are people in the captured photo, but none of them are students of this class
         if len(ids_to_mark_attendance) == 0:
                 print("no matches")
-                return jsonify({"status":"No matching students detected in the photo."}), 200
+                
         
         for row in student_who_should_attend:
             if row.studentid in ids_to_mark_attendance:
                 row.presentstate = True
-            #TODO: Remove send_email and let the scheduler handle this instead
+            
             else:
                 send_email(row.student.studentemail, data.get("className"), data.get("classCode"), data.get("timeSlot"), row.student.studentname)
 
         db.session.commit()
-    #TODO: Remove send_email and let the scheduler handle this instead
+    
     else:
         for row in student_who_should_attend:
             send_email(row.student.studentemail, data.get("className"), data.get("classCode"), data.get("timeSlot"), row.student.studentname)
@@ -565,23 +568,17 @@ def get_classes_by_educator_id(id):
     return [id[0] for id in class_ids]
 
 def send_email(toEmail, className, classCode, timeSlot, name):
-    return
-    
-    # Implementation for sending email using Mailtrap
+    print("EMAIL!")
+    #uncomment return during testing to avoid sending too many emails
+    #return
+    # Implementation for sending email using MailerSend
     api_key = os.environ.get("EMAIL_API_KEY")
-    ms = MailerSendClient(api_key = api_key)
 
-    email = (EmailBuilder()
-            .from_email("test@test-zxk54v80rwpljy6v.mlsender.net", "Automatic Student Attendance System")
-            .to_many([{"email": toEmail, "name": name}])
-            .subject("Non-Attendance Notification for " + classCode)
-            .html(f"""
-                <p>Dear {name},</p>
-                <p>You were marked absent for the class <strong>{className} ({classCode})</strong> held at <strong>{timeSlot}</strong>.</p>
-                <p>Please contact your instructor if you believe this is an error.</p>
-                <p>Best regards,<br>Automatic Student Attendance System</p>
-            """)
-            .text(f"""
+    mail = mt.Mail(
+        sender=mt.Address(email="Attendance-sys@uow.com", name="Automatic Student Attendance System"),
+        to=[mt.Address(email=toEmail)],
+        subject="Non-Attendance Notification for " + classCode,
+        text=(f"""
                 Dear {name},
 
                 You were marked absent for the class {className} ({classCode}) held at {timeSlot}.
@@ -589,7 +586,10 @@ def send_email(toEmail, className, classCode, timeSlot, name):
 
                 Best regards,
                 Automatic Student Attendance System
-            """)
-            .build())
+            """),
+        category="Integration Test",
+    )
 
-    ms.emails.send(email)
+    client = mt.MailtrapClient(token=api_key, sandbox=True, inbox_id=4622247)
+    return
+   
