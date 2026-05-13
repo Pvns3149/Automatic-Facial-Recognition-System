@@ -430,8 +430,7 @@ def login():
         token = generate_auth_token(login.educatorid)
 
         response = jsonify({"message": "Login successful"})
-        response.set_cookie("auth_token", token, httponly=True, samesite="None", secure=True, path="/") #change secure if HTTPS is used
-        #response.set_cookie("auth_token", token, httponly=True, samesite="lax", secure=False, path="/") #change secure if HTTPS is used
+        response.set_cookie("auth_token", token, httponly=True, samesite="lax", secure=False, path="/") #change secure if HTTPS is used
         return response
     else:
         #show the login page with an error message
