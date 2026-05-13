@@ -53,7 +53,7 @@ function AnalyticsPage({ API_BASE_URL }) {
   // Filter selections that drive the chart and table content.
   const [filters, setFilters] = useState({
     classId: '',
-    week: '3',
+    week: 'all',
   });
 
   //Get all student attendance for analytics page
