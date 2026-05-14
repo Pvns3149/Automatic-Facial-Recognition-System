@@ -11,7 +11,7 @@ function DashboardPage({ API_BASE_URL, week, session }) {
   const friday = new Date(today);
   friday.setDate(today.getDate() + daysUntilFriday); // Move to Friday
   friday.setHours(15, 30, 0, 0); // Set time to 3:30 PM
-  const isoString = friday.toISOString(); // Convert to ISO string
+  const isoString = today.toISOString(); // Convert to ISO string
   
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth()); // 0-11
