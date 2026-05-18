@@ -51,10 +51,14 @@ body {
 }
 
 .login-brand-logo {
-  width: 74px;
-  height: 74px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   margin-bottom: 20px;
+  object-fit: cover; /* Prevent stretching */
+  display: block;
+  margin-left: auto;
+  margin-right: auto; /* Center the image in its container */
 }
 
 .login-brand-title {

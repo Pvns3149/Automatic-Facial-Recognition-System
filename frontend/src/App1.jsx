@@ -76,7 +76,7 @@ function App() {
                   <h1 className="app-title">Automatic Student Attendance</h1>
                   <div className="profile-picture-wrapper">
                     <img
-                      src="/assets/profile-picture.png"
+                      src="/assets/ASAS_browser.svg"
                       alt="Profile"
                       className="profile-picture"
                     />

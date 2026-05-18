@@ -22,7 +22,7 @@ function LoginPage({setIsAuthenticated, API_BASE_URL}) {
     <main className="login-main">
       <section className="login-panel">
         <div className="login-brand">
-          <img src="/assets/profile-picture.png" alt="" className="login-brand-logo" />
+          <img src="/assets/ASAS.svg" alt="" className="login-brand-logo" />
           <h1 className="login-brand-title">Automatic Student Attendance</h1>
           <p className="login-brand-subtitle">
             Sign in to manage classes, attendance, analytics, and support.
