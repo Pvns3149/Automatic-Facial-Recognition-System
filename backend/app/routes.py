@@ -68,7 +68,7 @@ def health_check():
 #Database display test
 @api_bp.route("/users", methods=["GET"])
 def get_users():
-    users = Sample.query.all()
+    users = Educator.query.all()
     return jsonify({"users": [user.to_dict() for user in users]})
 
 
