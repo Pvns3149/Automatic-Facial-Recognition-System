@@ -81,9 +81,23 @@ function StudentsPage({ API_BASE_URL }) {
     const idFilter = appliedFilters.studentId;
     const nameFilter = appliedFilters.name.trim().toLowerCase();
 
+    const matchesBaseFilters = (student) => {
+      if (idFilter && String(student.id) !== String(idFilter)) {
+        return false;
+      }
+      if (nameFilter && !student.name.toLowerCase().includes(nameFilter)) {
+        return false;
+      }
+      return true;
+    };
+
     if (appliedFilters.week === '0') {
       //Handle "All Weeks" case
       return students.flatMap((student) => {
+        if (!matchesBaseFilters(student)) {
+          return [];
+        }
+
         return Object.keys(student.weeks || {}).map((week) => ({
           ...student,
           week,
@@ -96,15 +110,7 @@ function StudentsPage({ API_BASE_URL }) {
       });
     }
 
-    return students.filter((student) => {
-      if (idFilter && student.id !== idFilter) {
-        return false;
-      }
-      if (nameFilter && !student.name.toLowerCase().includes(nameFilter)) {
-        return false;
-      }
-      return true;
-    }).map((student) => ({
+    return students.filter(matchesBaseFilters).map((student) => ({
       ...student,
       week: appliedFilters.week, 
       status: student.weeks?.[appliedFilters.week] || 'present',
