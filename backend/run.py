@@ -1,9 +1,6 @@
 import os
 from dotenv import load_dotenv
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime, timedelta
 from app import create_app
-from app.models import Sample #Change to class
 
 
 
