@@ -4,11 +4,10 @@ from dotenv import load_dotenv
 from flask import Blueprint, jsonify, request
 from collections import defaultdict
 from app import db
-from app.models import Educator, Sample, Attendance, MyClasses, Class, Student
+from app.models import Educator, Attendance, MyClasses, Class, Student
 from datetime import datetime, timedelta
 from app.facemodels import FacialRecognitionModel
 from zoneinfo import ZoneInfo
-from mailersend import MailerSendClient, EmailBuilder
 from functools import wraps
 import mailtrap as mt
 
