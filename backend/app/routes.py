@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 from functools import wraps
 import mailtrap as mt
 
+#Written by Eric and Puvan 2026 - Backend API endpoint handling for all requests
 # Routes that specify endpoints to be called by the frontend for processing requests
 
 load_dotenv()

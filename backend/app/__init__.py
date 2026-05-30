@@ -7,7 +7,7 @@ from config import config
 db = SQLAlchemy()
 migrate = Migrate()
 
-
+#Written by Puvan 2026 - Backend server spin up config
 def create_app(config_name):
 
     #Create flask instance

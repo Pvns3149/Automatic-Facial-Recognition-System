@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from app import create_app
 
 
-
+#Written by Puvan 2026 - Main app to begin backend server and load env 
 #Load env files and config
 load_dotenv()
 

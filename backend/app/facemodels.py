@@ -5,6 +5,7 @@ import numpy as np
 from insightface.app.common import Face
 from insightface.model_zoo import model_zoo
 
+#Written by Eric 2026 - 
 class FacialRecognitionModel:
     def __init__(self, root: str = ""):
         self.prepare_models(root=root)
