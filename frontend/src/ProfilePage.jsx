@@ -4,6 +4,7 @@ function ProfilePage({ API_BASE_URL }) {
 
 const [educator, setEducator] = useState("");
 
+    // Get educator info from backend
     useEffect(() => {
         const getEducator = async () => {
             try{

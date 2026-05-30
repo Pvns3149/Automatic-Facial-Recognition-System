@@ -120,31 +120,6 @@ function AnalyticsPage({ API_BASE_URL }) {
     ? fallbackWeek
     : Number(filters.week) || fallbackWeek;
 
-  // // Dropdown options for Session filter.
-  // const sessionOptions = useMemo(
-  //   () => Array.from(new Set(classes.map((cls) => cls.session))),
-  //   [classes],
-  // );
-
-  // Class dropdown depends on selected session.
-  // const classOptions = useMemo(
-  //   () =>
-  //     classes.filter((cls) => !filters.session || cls.session === filters.session),
-  //   [],
-  // );
-
-  // // Time dropdown depends on selected session/class.
-  // const timeSlotOptions = useMemo(
-  //   () =>
-  //     Array.from(
-  //       new Set(
-  //         classOptions
-  //           .filter((cls) => !filters.classId || cls.id === filters.classId)
-  //           .map((cls) => cls.timeSlot),
-  //       ),
-  //     ),
-  //   [classOptions, filters.classId],
-  //);
 
   // Build quick lookup map so we can show class details for each student row.
   const classById = useMemo(
@@ -152,20 +127,7 @@ function AnalyticsPage({ API_BASE_URL }) {
     [classes],
   );
 
-  // Apply all current filters to the student list.
-  // const filteredStudents = useMemo(
-  //   () =>
-  //     students.filter((student) => {
-  //       const cls = classById[student.classId];
-  //       if (!cls) return false;
-  //       if (filters.session && cls.session !== filters.session) return false;
-  //       if (filters.classId && student.classId !== filters.classId) return false;
-  //       if (filters.timeSlot && cls.timeSlot !== filters.timeSlot) return false;
-  //       return true;
-  //     }),
-  //   [students, classById, filters],
-  // );
-
+ 
   // Present/Absent counts used by the weekly pie chart.
   const chartStats = useMemo(() => {
     let present = 0;
@@ -372,22 +334,6 @@ function AnalyticsPage({ API_BASE_URL }) {
       </section>
 
       <section className="analytics-filters">
-        {/* Session filter
-        <div className="analytics-filter-field">
-          <label htmlFor="analytics-session">Session</label>
-          <select
-            id="analytics-session"
-            value={filters.session}
-            onChange={handleFilterChange('session')}
-          >
-            <option value="">All sessions</option>
-            {sessionOptions.map((session) => (
-              <option key={session} value={session}>
-                {session}
-              </option>
-            ))}
-          </select>
-        </div> */}
 
         {/* Class filter */}
         <div className="analytics-filter-field">
@@ -409,22 +355,6 @@ function AnalyticsPage({ API_BASE_URL }) {
           </select>
         </div>
 
-        {/* Time filter */}
-        {/* <div className="analytics-filter-field">
-          <label htmlFor="analytics-time">Time</label>
-          <select
-            id="analytics-time"
-            value={filters.timeSlot}
-            onChange={handleFilterChange('timeSlot')}
-          >
-            <option value="">All times</option>
-            {timeSlotOptions.map((timeSlot) => (
-              <option key={timeSlot} value={timeSlot}>
-                {timeSlot}
-              </option>
-            ))}
-          </select>
-        </div> */}
 
         {/* Week / All Weeks filter */}
         <div className="analytics-filter-field">

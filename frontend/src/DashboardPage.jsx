@@ -11,7 +11,8 @@ function DashboardPage({ API_BASE_URL, week, session }) {
   const friday = new Date(today);
   friday.setDate(today.getDate() + daysUntilFriday); // Move to Friday
   friday.setHours(15, 30, 0, 0); // Set time to 3:30 PM
-  const isoString = today.toISOString(); // Convert to ISO string
+
+  const isoString = today.toISOString(); // Convert to ISO string (Change to friday.toISOString() for testing)
   
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth()); // 0-11
@@ -231,19 +232,6 @@ function DashboardPage({ API_BASE_URL, week, session }) {
   //Calendar to be integrated with client systems (outlook, Google accounts, etc)
   const calendar = useMemo(() => buildCalendar(year, month, today), [year, month]);
 
-  // const assignedClasses = classes.filter((cls) => cls.assigned);
-  // const activeClasses = assignedClasses.length;
-  // const totalStudents = assignedClasses.reduce(
-  //   (sum, cls) => sum + cls.totalStudents,
-  //   0,
-  // );
-  // const studentsPresent = assignedClasses.reduce(
-  //   (sum, cls) => sum + Math.round(cls.totalStudents * cls.presentPercent),
-  //   0,
-  // );
-  // const todayAttendancePct =
-  //   totalStudents > 0 ? Math.round((studentsPresent / totalStudents) * 100) : 0;
-
   const handlePrevMonth = () => {
     setMonth((prev) => {
       if (prev === 0) {
@@ -334,6 +322,7 @@ useEffect(() => {
 
 if (assignedClasses === undefined || assignedClasses.length === 0) {
     return (
+      // Default no classes display and foce uers to add class
       <>
         <main className="classes-main">
           <section className="classes-header">
@@ -351,6 +340,7 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
           </section>
         </main>
 
+        {/* Add class section */}
         {showAddModal && (
           <div className="modal-backdrop" onClick={handleCloseModal}>
             <div
@@ -454,6 +444,7 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
           ) : ( 
             <h3 className="dashboard-panel-title">Key Attendance Metrics [{currentClass.subjectCode}]</h3>
           )}
+          {/* Buttons */}
           <div className="dashboard-classes-actions">
             <button
               type="button"
@@ -469,6 +460,8 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
             >
               My Classes
             </button>
+
+            {/* Timer setting */}
             <button
               type="button"
               className="btn btn-primary"
@@ -497,6 +490,7 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
                 Cancel Timer
             </button>
             )}
+            {/* Remaining time display */}
           {remainingTime !== null && (
             <p className="timer-display">
               Time Remaining: {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')}
@@ -504,39 +498,8 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
           )}
           </div>
         </div>
-        {/* <div className="capture-attendance-actions">
-          <select
-            className="capture-interval-dropdown"
-            onChange={handleCaptureIntervalChange}
-            value={captureInterval || ''}
-          >
-            <option value="">Select Interval</option>
-            <option value="15">15 Minutes</option>
-            <option value="20">20 Minutes</option>
-          </select>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => TakePicture()}
-          >
-            Capture Attendance
-          </button>
-          {timerId && (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={handleCancelTimer}
-            >
-              Cancel Timer
-            </button>
-          )}
-          {remainingTime !== null && (
-            <p className="timer-display">
-              Time Remaining: {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')}
-            </p>
-          )}
-        </div> */}
 
+          {/* Class stats */}
         <section className="classes-stats-row">
         <article className="classes-stat-card">
           <h3 className="classes-stat-label">Students Present</h3>
@@ -565,6 +528,7 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
         </article>
       </section>
 
+          {/* Pie chart */}
         <h3 className="classes-chart-heading">Class Attendance Overview</h3>
         <section className="dashboard-main-row">
           <section className="classes-chart-row">

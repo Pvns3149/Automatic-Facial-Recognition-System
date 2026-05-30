@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 function Logout({ setIsAuthenticated, API_BASE_URL }) {
+    // Reset authenticated boolean on app
     useEffect(() => {
         setIsAuthenticated(false);
         logout();

@@ -7,6 +7,7 @@ function LoginPage({setIsAuthenticated, API_BASE_URL}) {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Handle login
   const handleSubmit = async (event) => {
     event.preventDefault();
     const response = await fetch(`${API_BASE_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email : email, passwd : password }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
@@ -28,7 +29,7 @@ function LoginPage({setIsAuthenticated, API_BASE_URL}) {
             Sign in to manage classes, attendance, analytics, and support.
           </p>
         </div>
-
+        {/* Login FOrm */}
         <form className="login-form" onSubmit={handleSubmit}>
           <h2 className="login-heading">Welcome back</h2>
           <p className="login-helper">Use your tutor account credentials to continue.</p>

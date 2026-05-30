@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import {ChangeClass, capitalizeFirstLetter} from './ClassUtils';
 
-// CLASS ID HANDLING NOT COMPLETERD, CURRENTLY HARDCODED TO CLASS 3
+
 function StudentsPage({ API_BASE_URL }) {
   const [students, setStudents] = useState([]);
   const [filters, setFilters] = useState({
@@ -113,6 +113,7 @@ function StudentsPage({ API_BASE_URL }) {
     }));
   }, [students, appliedFilters]);
 
+  // Handle filter changes and apply button
   const handleFilterChange = (field) => (event) => {
     const value = event.target.value;
     setFilters((prev) => ({ ...prev, [field]: value }));
@@ -123,8 +124,10 @@ function StudentsPage({ API_BASE_URL }) {
     setAppliedFilters(filters);
   };
 
+  // Handlke att change
   const handleSetStatus = async (studentId, status, week) => {
     try {
+      // Backend call to change attendance
       const response = await fetch(`${API_BASE_URL}/changeAttendance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -169,6 +172,7 @@ function StudentsPage({ API_BASE_URL }) {
           <label htmlFor="class-select" className="classes-select-label">
             Class
           </label>
+          {/* Display classes to choose from */}
           <select
             id="class-select"
             className="classes-select"
@@ -187,6 +191,7 @@ function StudentsPage({ API_BASE_URL }) {
         </section>
       </section>
 
+            {/* Filters Section */}
       <section className="students-filters">
         <form className="students-filters-form" onSubmit={handleApplyFilters}>
           <div className="students-filter-field">
@@ -260,6 +265,8 @@ function StudentsPage({ API_BASE_URL }) {
         </form>
       </section>
 
+      {/* Display Retrieved students */}
+
       <section className="students-table">
         <div className="students-table-header">
           <span>#</span>
@@ -281,6 +288,7 @@ function StudentsPage({ API_BASE_URL }) {
               <span>{student.email}</span>
               <span>{student.name}</span>
               <span>{`Week ${student.week}`}</span>
+              {/* Attendance buttons */}
               <span className="students-status-buttons">
                 <button
                   type="button"

@@ -12,14 +12,17 @@ function RegisterPage({ API_BASE_URL }) {
   });
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Handle form changes
   const handleChange = (field) => (event) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
+// Handlke submission of form
   const handleSubmit = async (event) => {
     event.preventDefault();
     setErrorMessage('');
     try {
+      // Backend form API
       const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,6 +37,7 @@ function RegisterPage({ API_BASE_URL }) {
         }),
       });
 
+      // Catch return message to use returned error message if it fails
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
@@ -42,6 +46,7 @@ function RegisterPage({ API_BASE_URL }) {
         return;
       }
 
+      // Redirect to login on success
       window.location.href = '/login';
     } catch (err) {
       setErrorMessage(err?.message || 'Network error.');
@@ -59,6 +64,7 @@ function RegisterPage({ API_BASE_URL }) {
           </p>
         </div>
 
+        {/* registration form */}
         <form className="login-form register-form" onSubmit={handleSubmit}>
           <h2 className="login-heading">Registration</h2>
           <p className="login-helper">All fields are required.</p>
@@ -142,6 +148,7 @@ function RegisterPage({ API_BASE_URL }) {
 
           {errorMessage && <p className="login-error">{errorMessage}</p>}
 
+          {/* buttons */}
           <div className="login-actions-row">
             <button type="submit" className="btn btn-primary login-submit">
               Register

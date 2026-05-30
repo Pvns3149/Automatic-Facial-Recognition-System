@@ -19,6 +19,7 @@ function App() {
   const week = computeTeachingWeek(new Date('2026-03-02T00:00:00'), breakWeek); //CHANGE SESSION DATE HERE
   const session = "Autumn"; //CHANGE SESSION HERE
 
+  //Check authentication status
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
@@ -43,7 +44,7 @@ function App() {
 
 
 
-  
+  // Create protected routes to ensure only authenticated users can access some pages
   const ProtectedRoute = ({ children }) => {
     if (!isAuthChecked) {
       return null;
@@ -52,6 +53,7 @@ function App() {
     return isAuthenticated ? children : <Navigate to="/login" replace />;
   };
 
+  // Public routes for the opposite
   const PublicRoute = ({ children }) => {
     if (!isAuthChecked) {
       return null;

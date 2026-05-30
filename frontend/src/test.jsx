@@ -5,11 +5,13 @@ function HealthCheck({ API_BASE_URL }) {
   const [apiStatus, setApiStatus] = useState('checking...')
   const [dbStatus, setDbStatus] = useState('checking...')
 
+  // Check API and DB connection
   useEffect(() => {
     checkApiHealth()
     checkDbHealth()
   }, [])
 
+  // API health check
   const checkApiHealth = async () => {
     try{
       const response = await fetch(`${API_BASE_URL}/health`);
@@ -25,7 +27,7 @@ function HealthCheck({ API_BASE_URL }) {
     }
   }
 
-
+// DB health check
   const checkDbHealth = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/users`);

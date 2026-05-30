@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
 function SupportPage() {
-  const [view, setView] = useState('contact'); // 'faqs' | 'contact'
+  // Change view mode
+  const [view, setView] = useState('contact'); 
 
   const showFaqs = (e) => {
     e.preventDefault();
@@ -14,8 +15,10 @@ function SupportPage() {
   };
 
   return (
+    
     <main className="support-main">
       <section className="support-title">
+        {/* Switcher links */}
         <h2 className="support-heading">Help &amp; Support</h2>
         <div className="support-breadcrumb">
           <a
@@ -44,6 +47,7 @@ function SupportPage() {
         </div>
       </section>
 
+      {/* HARDCODED CONTACT INFO */}
       {view === 'contact' ? (
         <section className="support-body">
           <SupportCard
@@ -69,6 +73,7 @@ function SupportPage() {
   );
 }
 
+// Support contact page
 function SupportCard({ title, description, phone, email, address }) {
   return (
     <article className="support-card">
@@ -94,9 +99,12 @@ function SupportCard({ title, description, phone, email, address }) {
   );
 }
 
+// FAQ page
 function FaqSection() {
   return (
+    
     <section className="faq-body">
+      {/* HARDCODED FAQ INFO */}
       <h3 className="faq-title">FAQs (Frequently Asked Questions)</h3>
 
       <div className="faq-item">
