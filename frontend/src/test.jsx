@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 
+// Written by Puvan, 2026 - Test page check PAI and DB connection
 function HealthCheck({ API_BASE_URL }) {
   const [apiStatus, setApiStatus] = useState('checking...')
   const [dbStatus, setDbStatus] = useState('checking...')

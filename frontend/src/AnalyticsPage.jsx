@@ -3,6 +3,7 @@ import {ChangeClass, getAvailableWeeks, getMaxAvailableWeek, capitalizeFirstLett
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
+// Written by Alyan. Backend integration by Puvan 2026 - Analytics page to show statistics and export function
 // Converts polar coordinates (angle + radius) to x/y point on SVG canvas.
 function polarToCartesian(cx, cy, r, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+// Written by Alyan. Backend integration by Puvan 2026 - Register page for creating new users
 function RegisterPage({ API_BASE_URL }) {
   const [form, setForm] = useState({
     fullName: '',

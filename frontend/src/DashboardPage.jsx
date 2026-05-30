@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import {computeTeachingWeek, capitalizeFirstLetter} from './ClassUtils';
 
+// Written by Alyan and Puvan. Backend integration by Puvan 2026 - Dashboard page to show current class,take attendance and manage classes
 function DashboardPage({ API_BASE_URL, week, session }) {
   const today = new Date();
   
@@ -181,7 +182,6 @@ function DashboardPage({ API_BASE_URL, week, session }) {
 
   const getDashboardClass = async () => {
       try{
-      //const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: week, dashboard: true, session: "Autumn " + year, time: isoString }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
       const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: week, session: session + " " + year, time: isoString }) }) //week set to 3 pending data insert
       if (response.status === 601) {
         //No classes are happening now

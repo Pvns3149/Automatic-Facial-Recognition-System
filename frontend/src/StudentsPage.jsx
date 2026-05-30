@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import {ChangeClass, capitalizeFirstLetter} from './ClassUtils';
 
-
+// Written by Alyan. Bakcend integration by Puvan 2026 - Student page to change attendance and view students' attendance
 function StudentsPage({ API_BASE_URL }) {
   const [students, setStudents] = useState([]);
   const [filters, setFilters] = useState({

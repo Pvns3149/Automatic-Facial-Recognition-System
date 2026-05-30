@@ -1,6 +1,7 @@
 import { useState } from 'react';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
+
+// Written by Alyan. Bakcend integration by Puvan 2026 - Login page to Log into system
 function LoginPage({setIsAuthenticated, API_BASE_URL}) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -10,7 +11,7 @@ function LoginPage({setIsAuthenticated, API_BASE_URL}) {
   // Handle login
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const response = await fetch(`${API_BASE_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email : email, passwd : password }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+    const response = await fetch(`${API_BASE_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email : email, passwd : password }) }); 
     if (response.ok) {
         setIsAuthenticated(true);
       return;

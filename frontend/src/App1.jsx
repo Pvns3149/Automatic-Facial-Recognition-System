@@ -12,6 +12,7 @@ import RegisterPage from './RegisterPage';
 import { computeTeachingWeek } from './ClassUtils';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// Written by Puvan 2026 - Routing page and overall auth control struct
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false); 
   const [isAuthChecked, setIsAuthChecked] = useState(false);

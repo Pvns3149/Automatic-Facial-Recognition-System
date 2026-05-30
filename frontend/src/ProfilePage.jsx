@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+// Written by Alyan. Bakcend integration by Puvan 2026 - Profile page to display educator data
 function ProfilePage({ API_BASE_URL }) {
 
 const [educator, setEducator] = useState("");
@@ -8,7 +9,7 @@ const [educator, setEducator] = useState("");
     useEffect(() => {
         const getEducator = async () => {
             try{
-            const response = await fetch(`${API_BASE_URL}/getEducator`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include' }); //CHANGE ID AND WEEK TO DYNAMIC VAR
+            const response = await fetch(`${API_BASE_URL}/getEducator`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include' }); 
             if (!response.ok) {
                 throw new Error('Server connection error');
             }

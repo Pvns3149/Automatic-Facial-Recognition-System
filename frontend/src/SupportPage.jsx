@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+// Written by Alyan, 2026 - Display hardcoded support info
 function SupportPage() {
   // Change view mode
   const [view, setView] = useState('contact'); 

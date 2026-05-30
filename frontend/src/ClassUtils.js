@@ -1,4 +1,4 @@
-
+// Written by Alyan, Puvan, Eric 2026 - Helper functions for repeated use in pages
 export const computeTeachingWeek = (startWeek, weekOfBreak) => {
     const today = new Date();
     const weekMs = 7 * 24 * 60 * 60 * 1000;
