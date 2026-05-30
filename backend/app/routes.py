@@ -12,6 +12,7 @@ from mailersend import MailerSendClient, EmailBuilder
 from functools import wraps
 import mailtrap as mt
 
+# Routes that specify endpoints to be called by the frontend for processing requests
 
 load_dotenv()
 
@@ -72,17 +73,11 @@ def get_users():
     return jsonify({"users": [user.to_dict() for user in users]})
 
 
-#Update attendance
+#Update attendance using a photo passed from the frontend, for Dashboard page
 @api_bp.route("/updateAttendance", methods=["POST"])
 def update_attendance_from_photo():
     
     data = request.get_json()
-
-    # testing
-    # with open("D:\\facial-recognition-fyp\\member-pics\\eric2.jpg", "rb") as f:
-    #     im_b64 = base64.b64encode(f.read())
-
-    # data = {"id": 2, "week": 2, "group_photo": im_b64}
 
     if not data or not data.get("group_photo") or not data.get("id") or not data.get("week"):
         return jsonify({"error": "Missing data"}), 400
@@ -95,21 +90,13 @@ def update_attendance_from_photo():
         Attendance.presentstate == False
     ).all()
 
-    # print(str(db.session.query(Attendance).join(
-    #     Student, Attendance.studentid == Student.studentid
-    # ).filter(
-    #     Attendance.classid == data["id"],
-    #     Attendance.weekheld == data["week"],
-    #     Attendance.presentstate == False
-    # )))
-
+    # All students are already present, no need to mark attendance further for this class
     if not student_who_should_attend:
-        print("nope")
         return jsonify({"status":"All students are already marked present."}), 200
 
     query_emb = face_model.get_embeddings(data["group_photo"])
 
-    # Only proceed if there are people in the captured photo
+    # Only proceed to match identities if there are people in the captured photo
     if (len(query_emb) > 0):
         id_who_should_attend = [a.studentid for a in student_who_should_attend]
         gallery_emb = [a.student.refembedding for a in student_who_should_attend]
@@ -118,25 +105,26 @@ def update_attendance_from_photo():
 
         # There are people in the captured photo, but none of them are students of this class
         if len(ids_to_mark_attendance) == 0:
+                # Debug print statement, then proceed to next step
                 print("no matches")
                 
-        
+        # Mark attendance for detected students, send email to absent students
         for row in student_who_should_attend:
             if row.studentid in ids_to_mark_attendance:
                 row.presentstate = True
-            
             else:
                 send_email(row.student.studentemail, data.get("className"), data.get("classCode"), data.get("timeSlot"), row.student.studentname)
 
         db.session.commit()
     
+    # No people in the photo, still send email to absent students
     else:
         for row in student_who_should_attend:
             send_email(row.student.studentemail, data.get("className"), data.get("classCode"), data.get("timeSlot"), row.student.studentname)
 
     return jsonify({"status":"attendances updated"}), 200
 
-#Change attendance
+#Change attendance from Students page
 @api_bp.route("/changeAttendance", methods=["POST"])
 def change_attendance():
 
@@ -150,7 +138,7 @@ def change_attendance():
     if not user:
         return jsonify({"error": "User not found"}), 404
     
-    #update attendance
+    #update attendance for the student selected from the frontend
     if (data["attending"] == "present"):
         user.presentstate = True        
     else:
@@ -159,7 +147,7 @@ def change_attendance():
     return jsonify({"status":"attendance updated"}), 200
 
 
-#Get the class happening right now
+#Get the class happening right now, for display on Dashboard
 @api_bp.route("/getDashboardClass", methods=["POST"])
 @token_required
 def get_dashboard_class():
@@ -176,6 +164,7 @@ def get_dashboard_class():
     if data.get("week") == -1:
         return jsonify({"error": "Break, no classes happening now"}), 602
 
+    # Get the IDs of classes in the user's class list
     class_ids = get_classes_by_educator_id(request.user_id)
 
     #Check if there are classes
@@ -186,9 +175,10 @@ def get_dashboard_class():
     current_time = datetime.fromisoformat(data["time"].replace("Z", "+00:00"))
     current_day = current_time.strftime("%a").upper()
 
+    # Retrieve all classes happening on this week day in this session
     class_records = Class.query.filter(Class.classid.in_(class_ids), Class.academicsession == data["session"], Class.classdayofweek == current_day).all()
     
-    # Loop through every class, find class that matches the current time
+    # Loop through every class happening on this week day in this session, find class that matches the current time
     for class_record in class_records:
 
         # Get start and end times as returned from class records metadata
@@ -200,8 +190,11 @@ def get_dashboard_class():
         class_start = current_time.astimezone(ZoneInfo("Australia/Sydney")).replace(hour=class_start.hour, minute=class_start.minute, second=0, microsecond=0)
         class_end = current_time.astimezone(ZoneInfo("Australia/Sydney")).replace(hour=class_end.hour, minute=class_end.minute, second=0, microsecond=0)
 
+        # Find the class happening right now from the previous retrieved results list
         if class_start < current_time and class_end > current_time:
+            # Debug statement to confirm the class found
             print ("Class found " + str(class_record.classid))
+            # Query the database to fetch all details of this matched class
             class_stats = db.session.query(
                 Class.classid,
                 Class.academicsession,
@@ -232,8 +225,10 @@ def get_dashboard_class():
             if not class_stats:
                 return jsonify({"error": "No classes happening now"}), 601
 
+            # Debug statement to confirm the class details
             print("Class record found " + str(class_stats.classid))
 
+            # Format and send response with class details
             response = {
                 "id": class_stats.classid,
                 "session": class_stats.academicsession,
@@ -245,24 +240,24 @@ def get_dashboard_class():
                 "presentStudents": class_stats.present_count,
                 "day": class_stats.classdayofweek
             }
-            #print(response)
-            #print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
             
             return jsonify({"class": response})
         
-    # Failure to find any classes
+    # Failure to find any classes happening now
     return jsonify({"error": "No classes happening now"}), 601
 
 
-#Get all assigned classes for a user for a given week
+#Get info of all selected classes the user has added to their class list
 @api_bp.route("/getClasses", methods=["POST"])
 @token_required
 def get_classes():
     # /getClasses endpoint requires no parameters
+    # Get the IDs of classes in the user's class list
     class_ids = get_classes_by_educator_id(request.user_id)
 
     #Check if there are classes
     if (len(class_ids) == 0):
+        # Happens when the user has not added any classes to their class list
         return jsonify({"error": "No classes found for given user"}), 404
 
     # Retrieve class information
@@ -283,8 +278,6 @@ def get_classes():
 
     # Sort by subject code for easier search
     response.sort(key=lambda x: x["subjectCode"])
-
-    #print(response)
     
     return jsonify({"classes": response})
 
@@ -314,7 +307,7 @@ def get_all_classes():
     return jsonify({"classes": response})
 
 
-#Get all assigned students for a user for a given week and class
+#Get all students enrolled in a class of a given week for a user
 @api_bp.route("/getStudents", methods=["POST"])
 def get_students():
     # Data receival and verification
@@ -322,16 +315,12 @@ def get_students():
     if not data.get("classId"):  
         return jsonify({"error": "Class ID not provided"}), 400
 
-    print(data.get("week"))
-
     # Parse all other parameters
     # Convert to Boolean masks
     queried_class_id = (Attendance.classid == data["classId"])
     queried_week_held = (Attendance.weekheld == int(data["week"])) if (data.get("week") != None and int(data.get("week")) != 0) else True # None or 0 means all weeks
     queried_stud_id = (Attendance.studentid == data["id"]) if data.get("id") != None else True
     queried_stud_name = Student.studentname.ilike(f"%{data['name'].strip()}%") if (data.get("name") != None and data.get("name").strip() != "") else True # Empty string means no searching by name
-
-    print(queried_stud_name)
 
   # Query attendance and student data
     attendance_records = db.session.query(
@@ -360,10 +349,10 @@ def get_students():
         students[student_id]["weeks"][record.weekheld] = "present" if record.presentstate else "absent"
 
     # Convert to list
-    print(students)
     response = list(students.values())
     return jsonify({"students" : response})
 
+#Persistently add a class to the user's class list 
 @api_bp.route("/addClass", methods=["POST"])
 @token_required
 def add_class():    
@@ -373,11 +362,14 @@ def add_class():
     if not data.get("classId"):  
         return jsonify({"error": "Class ID not provided"}), 400
     
-    #Assign class for user
-    existing_user = MyClasses.query.filter_by( educatorid = request.user_id, classid = data["classId"]).first()
-    if existing_user:
+    #Assign/add class for user
+    existing_class_assignment = MyClasses.query.filter_by( educatorid = request.user_id, classid = data["classId"]).first()
+
+    # Return error if the class is already in the user's class list
+    if existing_class_assignment:
         return jsonify({"error": "User is already assigned to this class"}), 409
 
+    # Otherwise, persistently assign/add the class to the user's class list
     newClass = MyClasses(educatorid = request.user_id, classid = data["classId"])
     db.session.add(newClass)
     db.session.commit()
@@ -385,6 +377,7 @@ def add_class():
     # Implementation for adding a new class
     return jsonify({"message": "Class added successfully"}), 200
 
+#Persistently remove a class from the user's class list 
 @api_bp.route("/removeClass", methods=["POST"])
 @token_required
 def remove_class():    
@@ -394,69 +387,87 @@ def remove_class():
     if not data.get("classId"):  
         return jsonify({"error": "Class ID not provided"}), 400
     
-    #Remove class for user if exists
-    existing_user = MyClasses.query.filter_by( educatorid = request.user_id, classid = data["classId"]).first()
-    if existing_user:
-        db.session.delete(existing_user)
+    #Remove class for user if the class was assigned to the user
+    existing_class_assignment = MyClasses.query.filter_by( educatorid = request.user_id, classid = data["classId"]).first()
+    if existing_class_assignment:
+        db.session.delete(existing_class_assignment)
         db.session.commit()
         return jsonify({"message": "Class removed successfully"}), 200
     else:
         return jsonify({"error": "User is not assigned to this class"}), 404
     
-
+#Get user/educator details to display on the Profile page
 @api_bp.route("/getEducator", methods=["POST"])
 @token_required
 def get_educator():
 
+    # Find the user and their details
     educator = Educator.query.filter_by(educatorid=request.user_id).first()
+
+    # Cannot find the user, return error
     if not educator:
         return jsonify({"error": "Educator not found"}), 404
 
+    # Format and send response with the user details
     response = educator.to_dict()
     
     return jsonify({"educator": response}), 200
 
+#Log the user into the system
 @api_bp.route('/login', methods=['POST'])
 def login():
+    # Get entered email and password
     email = request.json.get('email')
     passwd = request.json.get('passwd')
 
-    #Compare against database
+    # Query the database to see if the user by the provided email already exists
     login=Educator.query.filter_by(educatoremail=email).first()
 
+    # If the user by the provided email exists, and the hash for the entered password matches the database, proceed
     if login and login.verify_password(passwd):
 
         #Generate token
         token = generate_auth_token(login.educatorid)
 
+        # Set cookie with auth_token
         response = jsonify({"message": "Login successful"})
         response.set_cookie("auth_token", token, httponly=True, samesite="lax", secure=False, path="/") #change secure if HTTPS is used
         return response
+    # User by the email does not exist, or the password is incorrect 
     else:
         #show the login page with an error message
         return jsonify({"success": False, "message": "Invalid credentials"}), 401
 
-
+#Check whether the user is still logged in, judging by whether the cookie still exists on their browser
 @api_bp.route('/authCheck', methods=['GET'])
 def auth_status():
+    # Get the token from the cookie
     token = request.cookies.get('auth_token')
+
+    # No token found, user should not be logged in
     if not token:
         return jsonify({"err": "No Auth token"}), 200
 
+    # Check if the token is still active
     user_id = validate_token(token)
+
+    # Token has expired, user should not be logged in
     if user_id in ("Token expired", "Invalid token"):
         response = jsonify({"authenticated": False})
         response.delete_cookie("auth_token", path="/")
         return response, 200
 
+    # Otherwise, the user is still authenticated
     return jsonify({"authenticated": True}), 200
-    
 
-
+   
+#Register a new user/educator into the system
 @api_bp.route('/register', methods=['POST'])
 def register(): 
+    # Get all register detail from the frontend form
     data = request.get_json()
 
+    # If no register detail is provided, return error
     if not data:
         return jsonify({"error": "No data provided"}), 400
 
@@ -470,6 +481,7 @@ def register():
     if existing_id:
         return jsonify({"error": "ID already exists"}), 409
 
+    # Create the new educator based on provided user details and push to the database
     new_educator = Educator(
         educatorid=data["id"],
         educatorname=data["name"],
@@ -478,96 +490,38 @@ def register():
         educatorfaculty=data.get("faculty", ""),
         educatorlocation=data.get("officeBuilding", "")
     )
+    # Store the password hash in the database for authentication later for login
     new_educator.password = data["password"] 
     db.session.add(new_educator)
     db.session.commit()
 
     return jsonify({"message": "Registration successful"}), 200
 
+#Log the user out from the current session
 @api_bp.route('/logout', methods=['POST'])
 @token_required
 def logout():
  
+    # Properly reset the token and destroy the cookie upon logout
     response = jsonify({"message": "Logout successful"})
     response.set_cookie("reset", expires=0)
     response.delete_cookie("auth_token", path="/")
     return response, 200
 
-# Sample databse actions
 
-# @api_bp.route("/users/<int:user_id>", methods=["GET"])
-# def get_user(user_id):
-#     """Get a specific user by ID."""
-#     user = Sample.query.get_or_404(user_id)
-#     return jsonify({"user": user.to_dict()})
-
-
-# @api_bp.route("/users", methods=["POST"])
-# def create_user():
-#     """Create a new user."""
-#     data = request.get_json()
-
-#     if not data:
-#         return jsonify({"error": "No data provided"}), 400
-
-#     if not data.get("name") or not data.get("email"):
-#         return jsonify({"error": "Name and email are required"}), 400
-
-#     # Check if email already exists
-#     existing_user = Sample.query.filter_by(email=data["email"]).first()
-#     if existing_user:
-#         return jsonify({"error": "Email already exists"}), 409
-
-#     user = User(name=data["name"], email=data["email"])
-#     db.session.add(user)
-#     db.session.commit()
-
-#     return jsonify({"user": user.to_dict()}), 201
-
-
-# @api_bp.route("/users/<int:user_id>", methods=["PUT"])
-# def update_user(user_id):
-#     """Update an existing user."""
-#     user = User.query.get_or_404(user_id)
-#     data = request.get_json()
-
-#     if not data:
-#         return jsonify({"error": "No data provided"}), 400
-
-#     if "name" in data:
-#         user.name = data["name"]
-#     if "email" in data:
-#         # Check if new email already exists for another user
-#         existing_user = User.query.filter_by(email=data["email"]).first()
-#         if existing_user and existing_user.id != user_id:
-#             return jsonify({"error": "Email already exists"}), 409
-#         user.email = data["email"]
-
-#     db.session.commit()
-
-#     return jsonify({"user": user.to_dict()})
-
-
-# @api_bp.route("/users/<int:user_id>", methods=["DELETE"])
-# def delete_user(user_id):
-#     """Delete a user."""
-#     user = User.query.get_or_404(user_id)
-#     db.session.delete(user)
-#     db.session.commit()
-
-#     return jsonify({"message": "User deleted successfully"})
-
-
+# Reusable Helper functions
+#Get the IDs of classes in the user's class list
 def get_classes_by_educator_id(id):    
     # Check if user exists and get id of all classes the user has access to
     class_ids = MyClasses.query.with_entities(MyClasses.classid).filter_by(educatorid = id).all()
+    # Return empty list if the user has not added any classes to their class list yet
     if not class_ids:
         return []
     
     return [id[0] for id in class_ids]
 
+#Send an email to a specific student about their absence
 def send_email(toEmail, className, classCode, timeSlot, name):
-    print("EMAIL!")
     #uncomment return during testing to avoid sending too many emails
     #return
     # Implementation for sending email using MailerSend

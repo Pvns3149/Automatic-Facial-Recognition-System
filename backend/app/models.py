@@ -4,40 +4,7 @@ from sqlalchemy.dialects.postgresql import TEXT, INTEGER, BOOLEAN
 from sqlalchemy.dialects.postgresql import ARRAY
 from werkzeug.security import generate_password_hash, check_password_hash
 
-class Sample(db.Model):
-    #student table
-
-    __tablename__ = "sample"
-
-    col1 = db.Column(db.String(3), nullable=False, primary_key=True)
-    col2 = db.Column(db.String(3), nullable=False)
-
-    #Dict for JSON response
-    def to_dict(self):
-        """Convert user object to dictionary."""
-        return {
-            "col1": self.col1,
-            "col2": self.col2
-
-        }
-
-    #Identifier
-    def __repr__(self):
-        return f"<User {self.col1}>"
-
-class Vector(db.Model):
-    #Vector table
-
-    __tablename__ = "tblvector"
-
-    id = db.Column(db.String(100), nullable=False, primary_key=True)
-    embedding = db.Column(ARRAY(db.Float), nullable=False)
-
-
-
-    #Identifier
-    def __repr__(self):
-        return f"<User {self.id}>"
+# Models for SQLAlchemy ORM, mapping to the PostgreSQL tables
     
 class Student(db.Model):
     __tablename__ = "student"
@@ -87,21 +54,21 @@ class Educator(db.Model):
             "faculty": self.educatorfaculty,
             "location": self.educatorlocation
         }
-    
 
     def __repr__(self):
         return f"<Educator {self.educatorid}>"
 
-    
-        # Prevent plaintext password from being read
+    # Prevent plaintext password from being read
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
     
+    # Generate hash to be stored instead of plaintext password
     @password.setter
     def password(self, password):
         self.educatorpass = generate_password_hash(password)
 
+    # Verify password for authentication
     def verify_password(self, password):  
         return check_password_hash(self.educatorpass, password)
 

@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from app.facemodels import FacialRecognitionModel
 from app.models import Student, Educator, Class, Enrolment, Attendance, MyClasses
 
+# Seed the database with sample data. Unused.
+
 def to_bool(value):
     if value == "true": return True 
     else: return False
