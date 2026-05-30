@@ -18,14 +18,12 @@ function StudentsPage({ API_BASE_URL }) {
   const getStudents = async () => {
     
       try{
-        console.log(current.id)
         const response = await fetch(`${API_BASE_URL}/getStudents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : appliedFilters.id, name : appliedFilters.name, classId : current?.id, week: appliedFilters.week }) }); 
         if (!response.ok) {
           throw new Error('Server connection error');
         }
         const data = await response.json();
         setStudents(data.students);
-        console.log('Return data:', data.students);
 
       }
 
@@ -44,7 +42,6 @@ function StudentsPage({ API_BASE_URL }) {
       }
       const data = await response.json();
       setClasses(data.classes);
-      console.log('Return data:', data.classes);
 
       //Set default selected ID 
       if (data.classes.length > 0) {
@@ -69,7 +66,6 @@ function StudentsPage({ API_BASE_URL }) {
   //Fetch Std list
   useEffect(() => {
     if (current) {
-      console.log(appliedFilters);
       getStudents();
     }
   }, [appliedFilters, current]);

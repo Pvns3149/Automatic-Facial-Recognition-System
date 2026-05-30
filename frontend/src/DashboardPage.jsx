@@ -98,7 +98,6 @@ function DashboardPage({ API_BASE_URL, week, session }) {
       }
 
       setAssignedClasses(data.classes);
-      console.log('Return User classes data:', data.classes);
       }
 
       catch (err) {
@@ -109,7 +108,6 @@ function DashboardPage({ API_BASE_URL, week, session }) {
   
   //Retreive all classes
   const getAllClasses = async () => {
-    console.log("Get all classes list")
   
     try{
     const response = await fetch(`${API_BASE_URL}/getAllClasses`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify() }) 
@@ -118,7 +116,6 @@ function DashboardPage({ API_BASE_URL, week, session }) {
     }
     const data = await response.json();
     setAllClasses(data.classes);
-    console.log('All classes return data:', data.classes);
     }
 
     catch (err) {
@@ -128,10 +125,8 @@ function DashboardPage({ API_BASE_URL, week, session }) {
 
   //submit attendannce image to backend for processing
   const TakeAttendance = async (img, value) => {
-    console.log(value)
     if(value == 1 || window.confirm("Are you sure you want to submit attendance for this class? All students not currently in class will receive a non-attendance notification email.")) {
     
-      console.log("Submitting attendance with image data:", img);
       try{
         const response = await fetch(`${API_BASE_URL}/updateAttendance`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id : currentClass.id, week : week, group_photo: img, className: currentClass.subjectName, classCode: currentClass.subjectCode, timeSlot: currentClass.timeSlot}) }) //Week set to 3 pending data insert
         if (response.ok) {
@@ -172,7 +167,6 @@ function DashboardPage({ API_BASE_URL, week, session }) {
 
           //Convert the canvas to a base64 image string and send to backend
           const imageData = canvas.toDataURL('image/png');
-          console.log('Captured image data:', imageData);
           TakeAttendance(imageData, value);
 
           //Stop the webcam stream
@@ -185,13 +179,11 @@ function DashboardPage({ API_BASE_URL, week, session }) {
   }
 
   const getDashboardClass = async () => {
-     console.log("Cookies:", document.cookie);
       try{
       //const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id : 'LEC001', week: week, dashboard: true, session: "Autumn " + year, time: isoString }) }); //CHANGE ID AND WEEK TO DYNAMIC VAR
       const response = await fetch(`${API_BASE_URL}/getDashboardClass`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ week: week, session: session + " " + year, time: isoString }) }) //week set to 3 pending data insert
       if (response.status === 601) {
         //No classes are happening now
-        console.log("No classes happening now");
         setClass({
           "id": -1,
           "subjectCode": "No currently running classes",
@@ -211,7 +203,6 @@ function DashboardPage({ API_BASE_URL, week, session }) {
       }
       const data = await response.json();
       setClass(data.class);
-      //console.log('Return data:', data.class);
       }
 
       catch (err) {
@@ -297,7 +288,6 @@ function DashboardPage({ API_BASE_URL, week, session }) {
       setRemainingTime(null);
     }
 
-    console.log('Selected interval value:', value);
 
     if (value === 5) {
       setRemainingTime(5); // Set remaining time to 5 seconds
@@ -431,7 +421,6 @@ if (assignedClasses === undefined || assignedClasses.length === 0) {
     );
   }
 
-  console.log('Current data:', assignedClasses);
   const present = currentClass.presentStudents;
   const absent = currentClass.totalStudents - present;
   const presentPct = Math.round(present / currentClass.totalStudents * 100) || 0;

@@ -66,8 +66,6 @@ function AnalyticsPage({ API_BASE_URL }) {
       }
       const data = await response.json();
       setStudents(data.students);
-      console.log('Return student data:', data.students);
-
     }
 
     catch (err) {
@@ -83,7 +81,6 @@ function AnalyticsPage({ API_BASE_URL }) {
       }
       const data = await response.json();
       setClasses(data.classes);
-      console.log('Return class data:', data.classes);
 
       //Set default selected ID 
       if (data.classes.length > 0) {

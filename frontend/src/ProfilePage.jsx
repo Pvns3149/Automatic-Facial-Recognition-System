@@ -21,7 +21,6 @@ const [educator, setEducator] = useState("");
 
         getEducator();
     }, []);
-    console.log('Educator data in ProfilePage:', educator);
 
   return (
     <main className="profile-main">

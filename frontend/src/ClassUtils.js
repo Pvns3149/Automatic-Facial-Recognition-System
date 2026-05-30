@@ -29,7 +29,6 @@ export const computeTeachingWeek = (startWeek, weekOfBreak) => {
 
 
 export function ChangeClass(selectedId, classes) {
-    console.log('Current change process being called: ', selectedId, classes);
     // Update current whenever classes or selectedId changes
     const selectedClass = classes.find((c) => c.id === parseInt(selectedId)) ?? classes[0];
     return selectedClass;
