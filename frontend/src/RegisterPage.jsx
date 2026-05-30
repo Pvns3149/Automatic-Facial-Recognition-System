@@ -18,26 +18,34 @@ function RegisterPage({ API_BASE_URL }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const response = await fetch(`${API_BASE_URL}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: form.fullName.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        id: form.staffId.trim(),
-        faculty: form.faculty.trim(),
-        officeBuilding: form.officeBuilding.trim(),
-        password: form.password,
-      }),
-    });
+    setErrorMessage('');
+    try {
+      const response = await fetch(`${API_BASE_URL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.fullName.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          id: form.staffId.trim(),
+          faculty: form.faculty.trim(),
+          officeBuilding: form.officeBuilding.trim(),
+          password: form.password,
+        }),
+      });
 
-    if (!response.ok) {
-      alert(response.message || 'Registration failed.');
-      return;
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message = (data && (data.error || data.message)) || 'Registration failed.';
+        setErrorMessage(message);
+        return;
+      }
+
+      window.location.href = '/login';
+    } catch (err) {
+      setErrorMessage(err?.message || 'Network error.');
     }
-
-    window.location.href = '/login';
   };
 
   return (
