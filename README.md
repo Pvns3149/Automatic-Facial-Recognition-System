@@ -19,8 +19,6 @@ A full-stack web application with a React frontend and Python Flask backend, con
 ├── frontend/                  # React application
 │   ├── public/...             # Assets, icons, logos etc
 │   ├── src/
-│   │   ├── services/
-│   │   │   └── api.js         # API service for backend communication
 │   │   ├── App1.jsx           # Main application component
 │   │   ├── index.css          # Application styles
 │   │   └── ...                # JSX files for other pages

@@ -1,10 +1,9 @@
 from app import db
 from pgvector.sqlalchemy import VECTOR
 from sqlalchemy.dialects.postgresql import TEXT, INTEGER, BOOLEAN
-from sqlalchemy.dialects.postgresql import ARRAY
 from werkzeug.security import generate_password_hash, check_password_hash
 
-#Written by Eric 2026 - Models for SQLAlchemy ORM, mapping to the PostgreSQL tables
+# Written by Eric 2026 - Models for SQLAlchemy ORM, mapping to the PostgreSQL tables
     
 class Student(db.Model):
     __tablename__ = "student"

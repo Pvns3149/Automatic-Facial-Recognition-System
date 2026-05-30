@@ -8,7 +8,11 @@ from dotenv import load_dotenv
 from app.facemodels import FacialRecognitionModel
 from app.models import Student, Educator, Class, Enrolment, Attendance, MyClasses
 
-# Seed the database with sample data. Unused.
+# Written by Eric 2026 - One-time seeding script used to populate the PostgreSQL database tables
+
+# To seed the database with sample data. Unused, left here in the source code
+# as a sample for reference, in case you may want to use your own database
+# and seed data.
 
 def to_bool(value):
     if value == "true": return True 
